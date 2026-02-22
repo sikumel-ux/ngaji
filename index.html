@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juz Amma Learner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .arabic { font-family: 'Amiri', serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <header class="bg-emerald-600 text-white p-6 shadow-lg text-center">
+        <h1 class="text-2xl font-bold">📖 Juz Amma Learning App</h1>
+        <p class="text-sm opacity-90 mt-1">Pantau hafalanmu dengan mudah</p>
+    </header>
+
+    <main class="max-w-2xl mx-auto p-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-emerald-100">
+            <h2 class="text-sm font-semibold text-emerald-800 mb-2 text-center uppercase tracking-wider">Progres Hafalan</h2>
+            <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                <div id="progress-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-xs text-center mt-2 text-slate-500">0 dari 37 surat selesai</p>
+        </div>
+
+        <div id="surah-container" class="space-y-3">
+            <p class="text-center text-slate-400 py-10">Memuat daftar surat...</p>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "https://quran-api-id.vercel.app/surah"; // API Quran Indonesia
+        const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
+        
+        let completedSurahs = [];
+
+        // 1. Ambil Data Juz 30 (Surat 78 - 114)
+        async function fetchJuzAmma() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                const juzAmma = data.filter(s => s.number >= 78 && s.number <= 114);
+                renderSurahs(juzAmma);
+            } catch (error) {
+                console.error("Gagal memuat data:", error);
+                document.getElementById('surah-container').innerHTML = "Gagal memuat data. Periksa koneksi internet.";
+            }
+        }
+
+        // 2. Render List ke HTML
+        function renderSurahs(surahs) {
+            const container = document.getElementById('surah-container');
+            container.innerHTML = "";
+
+            surahs.forEach(surah => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center hover:border-emerald-300 transition-colors";
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="bg-emerald-100 text-emerald-700 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs">
+                            ${surah.number}
+                        </span>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">${surah.name}</h3>
+                            <p class="text-xs text-slate-500">${surah.translation} • ${surah.numberOfVerses} Ayat</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="arabic text-xl text-emerald-900">${surah.asma}</span>
+                        <input type="checkbox" 
+                               class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                               onchange="toggleSurah(${surah.number}, this.checked)">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 3. Logika Simpan Hafalan & Integrasi API Kamu
+        async function toggleSurah(surahNumber, isChecked) {
+            if (isChecked) {
+                completedSurahs.push(surahNumber);
+            } else {
+                completedSurahs = completedSurahs.filter(n => n !== surahNumber);
+            }
+
+            updateUI();
+
+            // Kirim data ke Google Apps Script kamu
+            try {
+                fetch(GAS_API, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting agar tidak kena CORS error di GAS
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        surahNumber: surahNumber,
+                        status: isChecked ? "Hafal" : "Belum",
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                console.log(`Status Surat ${surahNumber} dikirim ke API.`);
+            } catch (err) {
+                console.warn("Gagal mengirim ke GAS:", err);
+            }
+        }
+
+        function updateUI() {
+            const total = 37; // Total surat di Juz Amma
+            const percent = (completedSurahs.length / total) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `${completedSurahs.length} dari ${total} surat selesai`;
+        }
+
+        // Jalankan saat load
+        fetchJuzAmma();
+    </script>
+</body>
+  </html>
+  
