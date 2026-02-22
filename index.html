@@ -61,7 +61,9 @@
                 <p class="text-[9px] font-black text-gold-primary tracking-[0.3em] mb-10 uppercase">Baca dari Kanan ke Kiri</p>
                 <div id="display-training" class="arabic text-7xl flex justify-center gap-8 text-slate-800 mb-10"></div>
                 <div id="display-latin" class="text-slate-400 font-bold tracking-[0.5em] text-xs uppercase mb-10"></div>
-                <button onclick="generateTraining()" class="w-full py-4 bg-slate-900 text-gold-light rounded-2xl font-bold text-[10px] tracking-widest border border-gold-primary/30 active:scale-95 transition-all uppercase">ACAK HURUF BARU</button>
+                <button onclick="generateTraining()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[12px] tracking-[0.2em] shadow-xl active:scale-95 transition-all uppercase">
+                    ACAK HURUF BARU
+                </button>
             </div>
         </div>
     </main>
@@ -170,7 +172,6 @@
             body.innerHTML = `<div class="py-20 text-center text-gold-primary animate-pulse text-xs tracking-[0.4em]">MEMUAT...</div>`;
 
             try {
-                // Fetch Arab, Terjemahan, dan Audio sekaligus
                 const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
                 const data = await res.json();
                 const arab = data.data[0].ayahs;
