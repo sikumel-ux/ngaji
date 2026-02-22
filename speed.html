@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Al-Quran Master Speed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold-primary: #C5A358; --gold-light: #E8D5A1; --dark-royal: #1A1A1A; --bg-marble: #FDFDFB; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-marble); color: var(--dark-royal); overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .arabic { font-family: 'Amiri', serif; direction: rtl; }
+        
+        #audio-init { 
+            position: fixed; inset: 0; z-index: 9999; background: #1A1A1A; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 20px; text-align: center;
+        }
+
+        .islami-pattern { background-image: url('https://www.transparenttextures.com/patterns/islamic-art.png'); opacity: 0.03; position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+        .royal-card { background: white; border-radius: 24px; border: 1px solid rgba(197, 163, 88, 0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.03); transition: 0.3s; cursor: pointer; position: relative; z-index: 5; }
+        .gold-header { background: linear-gradient(135deg, #1A1A1A 0%, #333333 100%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; position: relative; z-index: 10; }
+        
+        .tab-btn { transition: 0.4s; position: relative; opacity: 0.4; font-size: 10px; font-weight: 800; cursor: pointer; z-index: 20; }
+        .tab-btn.active { color: var(--gold-primary); opacity: 1; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 15px; height: 3px; background: var(--gold-primary); border-radius: 10px; }
+        
+        .hijaiyah-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
+        .letter-card { 
+            background: white; border-radius: 18px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.1); 
+            transition: 0.2s; cursor: pointer; aspect-ratio: 1/1; 
+        }
+
+        .active-ayat-box { background-color: rgba(197, 163, 88, 0.08); border-radius: 24px; padding: 20px; border-left: 4px solid var(--gold-primary); }
+        .modal-sheet { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); z-index: 100; }
+        .modal-sheet.show { transform: translateY(0); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="pb-10">
+    <div class="islami-pattern"></div>
+
+    <div id="audio-init">
+        <div class="mb-8">
+            <div class="w-24 h-24 border-2 border-[#C5A358] rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(197,163,88,0.3)]">
+                <span class="text-4xl animate-pulse">🕌</span>
+            </div>
+        </div>
+        <h2 class="text-2xl font-black text-[#E8D5A1] mb-2 tracking-[0.3em] uppercase">Bismillah</h2>
+        <button onclick="startApp()" class="w-full max-w-[280px] py-5 bg-[#C5A358] text-white rounded-2xl font-black text-sm shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em]">
+            MULAI BELAJAR
+        </button>
+    </div>
+
+    <header class="gold-header px-6 pt-12 pb-14 text-white shadow-2xl">
+        <div class="max-w-2xl mx-auto text-center">
+            <h1 id="main-title" class="text-2xl font-extrabold tracking-tight mb-8">Juz Amma</h1>
+            <div class="flex justify-between px-4">
+                <button onclick="switchTab('juz')" id="tab-juz" class="tab-btn active">JUZ 30</button>
+                <button onclick="switchTab('hijaiyah')" id="tab-hijaiyah" class="tab-btn">HURUF</button>
+                <button onclick="switchTab('training')" id="tab-training" class="tab-btn">LATIHAN</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-6 mt-6 relative z-10">
+        <div id="section-juz" class="space-y-4"></div>
+        <div id="section-hijaiyah" class="hidden"><div class="hijaiyah-grid" id="hijaiyah-container"></div></div>
+        <div id="section-training" class="hidden space-y-8">
+            <div class="bg-white rounded-[40px] p-10 text-center shadow-sm border border-slate-100">
+                <div id="display-training" class="arabic text-7xl flex justify-center gap-8 text-slate-800 mb-10"></div>
+                <div id="display-latin" class="text-slate-400 font-bold tracking-[0.5em] text-xs uppercase mb-10"></div>
+                <button onclick="generateTraining()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[12px] tracking-[0.2em] shadow-xl active:scale-95 transition-all">ACAK HURUF BARU</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="surah-modal" class="fixed inset-0 z-[100] flex items-end justify-center hidden bg-black/70 backdrop-blur-sm">
+        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[45px] h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="w-full flex justify-center py-5" onclick="closeModal()"><div class="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer"></div></div>
+            
+            <div class="px-8 pb-4 flex justify-between items-center border-b border-slate-50">
+                <button onclick="closeModal()" class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">TUTUP</button>
+                <button onclick="toggleSpeed()" id="speed-btn" class="px-4 py-2 bg-gold-light/20 text-gold-primary rounded-full font-black text-[10px] tracking-widest border border-gold-primary/20">SPEED: 1.0x</button>
+            </div>
+
+            <div id="modal-body" class="p-8 overflow-y-auto flex-1 no-scrollbar space-y-10 scroll-smooth"></div>
+        </div>
+    </div>
+
+    <script>
+        const player = new Audio();
+        let currentSpeed = 1.0;
+        
+        const hijaiyahData = [
+            {h: 'أَ', n: 'Alif'}, {h: 'بَ', n: 'Ba'}, {h: 'تَ', n: 'Ta'}, {h: 'ثَ', n: 'Tsa'},
+            {h: 'جَ', n: 'Ja'}, {h: 'حَ', n: 'Ha'}, {h: 'خَ', n: 'Kho'}, {h: 'دَ', n: 'Da'},
+            {h: 'ذَ', n: 'Dza'}, {h: 'رَ', n: 'Ro'}, {h: 'زَ', n: 'Za'}, {h: 'سَ', n: 'Sa'},
+            {h: 'شَ', n: 'Sya'}, {h: 'صَ', n: 'Sho'}, {h: 'ضَ', n: 'Dho'}, {h: 'طَ', n: 'Tho'},
+            {h: 'ظَ', n: 'Zho'}, {h: 'عَ', n: 'A'}, {h: 'غَ', n: 'Gho'}, {h: 'فَ', n: 'Fa'},
+            {h: 'قَ', n: 'Qo'}, {h: 'كَ', n: 'Ka'}, {h: 'لَ', n: 'La'}, {h: 'مَ', n: 'Ma'},
+            {h: 'نَ', n: 'Na'}, {h: 'وَ', n: 'Wa'}, {h: 'هَـ', n: 'Ha'}, {h: 'يَ', n: 'Ya'}
+        ];
+
+        let juzAmmaSurahs = [];
+        let isAutoplayMode = false;
+        let currentPlayingIndex = -1;
+
+        function startApp() {
+            player.play().catch(() => {});
+            document.getElementById('audio-init').style.display = 'none';
+            init();
+        }
+
+        async function init() {
+            try {
+                const res = await fetch("https://api.quran.com/api/v4/chapters?language=id");
+                const data = await res.json();
+                juzAmmaSurahs = data.chapters.slice(77, 114);
+                renderJuz();
+                renderHijaiyah();
+                generateTraining();
+            } catch (e) { console.error("Init failed"); }
+        }
+
+        function toggleSpeed() {
+            const speeds = [1.0, 0.75, 0.5];
+            let idx = speeds.indexOf(currentSpeed);
+            currentSpeed = speeds[(idx + 1) % speeds.length];
+            player.playbackRate = currentSpeed;
+            document.getElementById('speed-btn').innerText = `SPEED: ${currentSpeed.toFixed(1)}x`;
+        }
+
+        function switchTab(tab) {
+            document.getElementById('section-juz').classList.toggle('hidden', tab !== 'juz');
+            document.getElementById('section-hijaiyah').classList.toggle('hidden', tab !== 'hijaiyah');
+            document.getElementById('section-training').classList.toggle('hidden', tab !== 'training');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            stopAudio();
+        }
+
+        function renderJuz() {
+            const container = document.getElementById('section-juz');
+            container.innerHTML = juzAmmaSurahs.map((s, idx) => `
+                <div class="royal-card p-6 flex items-center justify-between mb-4" onclick="openModal(${idx})">
+                    <div class="flex items-center gap-6">
+                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-gold-primary text-xs border border-gold-light/20 shadow-inner">${s.id}</div>
+                        <div class="font-extrabold text-slate-800 text-lg">${s.name_simple}</div>
+                    </div>
+                    <span class="arabic text-2xl text-slate-700 font-bold">${s.name_arabic}</span>
+                </div>`).join('');
+        }
+
+        function renderHijaiyah() {
+            const container = document.getElementById('hijaiyah-container');
+            container.innerHTML = hijaiyahData.map(item => `
+                <div class="letter-card" onclick="playVoice('${item.h}')">
+                    <span class="arabic text-3xl font-bold text-slate-800">${item.h}</span>
+                    <span class="text-[10px] font-black text-gold-primary uppercase mt-1">${item.n}</span>
+                </div>`).join('');
+        }
+
+        function playVoice(text) {
+            player.pause();
+            player.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ar&client=tw-ob`;
+            player.playbackRate = 1.0; // Voice selalu normal
+            player.play();
+        }
+
+        function generateTraining() {
+            let selected = [];
+            for(let i=0; i<3; i++) selected.push(hijaiyahData[Math.floor(Math.random() * hijaiyahData.length)]);
+            document.getElementById('display-training').innerHTML = selected.map(s => `<span onclick="playVoice('${s.h}')">${s.h}</span>`).join('');
+            document.getElementById('display-latin').innerText = selected.map(s => s.n.toLowerCase()).join(' - ');
+        }
+
+        async function openModal(index) {
+            const s = juzAmmaSurahs[index];
+            document.getElementById('surah-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modal-content').classList.add('show'), 10);
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `<div class="py-20 text-center text-gold-primary animate-pulse font-bold">MEMUAT...</div>`;
+
+            try {
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
+                const data = await res.json();
+                const arab = data.data[0].ayahs;
+                const indo = data.data[1].ayahs;
+                const audio = data.data[2].ayahs;
+
+                let html = `<button onclick="playFullSurah()" class="w-full mb-8 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-xs tracking-widest">▶ PUTAR SATU SURAT</button>`;
+                arab.forEach((v, i) => {
+                    html += `
+                        <div class="transition-all duration-500 mb-10" id="box-${i}" data-audio="${audio[i].audio}">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex justify-between items-center">
+                                    <button onclick="isAutoplayMode=false; playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center font-bold">▶</button>
+                                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ayat ${i+1}</span>
+                                </div>
+                                <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900">${v.text}</p>
+                                <p class="text-sm text-slate-500 text-left border-l-2 border-gold-light/30 pl-4 italic">${indo[i].text}</p>
+                            </div>
+                        </div>`;
+                });
+                body.innerHTML = html;
+            } catch (e) { body.innerHTML = "Error."; }
+        }
+
+        function playAudio(url, index) {
+            stopAudio();
+            currentPlayingIndex = index;
+            const btn = document.getElementById(`play-${index}`);
+            player.src = url;
+            player.playbackRate = currentSpeed; // Terapkan speed
+            player.play().then(() => {
+                if(btn) {
+                    btn.innerHTML = `⏸`;
+                    btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg";
+                }
+                document.getElementById(`box-${index}`).classList.add('active-ayat-box');
+                document.getElementById(`box-${index}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
+        player.onended = () => {
+            if (isAutoplayMode) {
+                const nextIndex = currentPlayingIndex + 1;
+                const nextBox = document.getElementById(`box-${nextIndex}`);
+                if (nextBox) playAudio(nextBox.getAttribute('data-audio'), nextIndex);
+                else stopAudio();
+            } else stopAudio();
+        };
+
+        function playFullSurah() { isAutoplayMode = true; const firstBox = document.getElementById('box-0'); if (firstBox) playAudio(firstBox.getAttribute('data-audio'), 0); }
+
+        function stopAudio() {
+            player.pause();
+            document.querySelectorAll('[id^="play-"]').forEach(b => {
+                b.innerHTML = "▶";
+                b.className = "w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center";
+            });
+            document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('active-ayat-box'));
+        }
+
+        function closeModal() {
+            isAutoplayMode = false; stopAudio();
+            document.getElementById('modal-content').classList.remove('show');
+            setTimeout(() => document.getElementById('surah-modal').classList.add('hidden'), 500);
+        }
+    </script>
+</body>
+</html>
