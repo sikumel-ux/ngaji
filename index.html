@@ -3,49 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Juz Amma Learner - iPhone Style</title>
+    <title>Juz Amma Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --ios-bg: #F2F2F7; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--ios-bg); -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--ios-bg); color: #1C1C1E; -webkit-tap-highlight-color: transparent; }
         .arabic { font-family: 'Amiri', serif; direction: rtl; }
-        .ios-card { background: white; border-radius: 20px; border: 0.5px solid rgba(0,0,0,0.05); }
+        .ios-card { background: white; border-radius: 22px; border: 0.5px solid rgba(0,0,0,0.05); transition: all 0.2s ease; }
+        .ios-card:active { transform: scale(0.97); background: #E5E5EA; }
         .modal-sheet { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); }
         .modal-sheet.show { transform: translateY(0); }
-        .active-ayat { background-color: #F0FDF4; border-radius: 16px; border-left: 4px solid #34C759; }
+        .active-ayat { background-color: #F0FDF4; border-radius: 20px; border-left: 5px solid #34C759; }
+        .progress-bar { transition: width 0.8s cubic-bezier(0.23, 1, 0.32, 1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .ios-checkbox { appearance: none; width: 26px; height: 26px; border: 2px solid #D1D1D6; border-radius: 50%; position: relative; cursor: pointer; transition: 0.2s; }
+        .ios-checkbox:checked { background: #34C759; border-color: #34C759; }
+        .ios-checkbox:checked::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body class="pb-10">
 
-    <div id="audio-init" class="fixed inset-0 z-[60] bg-slate-900 flex flex-col items-center justify-center text-white p-10 text-center">
-        <div class="bg-emerald-500 w-24 h-24 rounded-full flex items-center justify-center text-4xl mb-6 animate-bounce">🔊</div>
-        <h2 class="text-2xl font-bold mb-4">Izin Audio</h2>
-        <p class="opacity-70 mb-8 text-sm">Browser memerlukan izin manual untuk memutar murottal. Klik tombol di bawah:</p>
-        <button onclick="startApp()" class="bg-emerald-500 text-white px-12 py-4 rounded-full font-bold shadow-2xl active:scale-95 transition-all text-lg">
-            AKTIFKAN & MULAI
+    <div id="audio-init" class="fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center p-10 text-center">
+        <div class="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-4xl mb-6 shadow-inner">🔊</div>
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Mulai Mengaji</h2>
+        <p class="text-slate-400 text-sm mb-10 leading-relaxed">Ketuk tombol di bawah untuk mengaktifkan murottal Syaikh Misyari Rasyid.</p>
+        <button onclick="startApp()" class="w-full max-w-xs bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
+            Aktifkan & Masuk
         </button>
-        <p id="debug-msg" class="mt-4 text-xs text-slate-500"></p>
     </div>
 
-    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 py-6 border-b border-slate-100">
-        <div class="max-w-2xl mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-extrabold">Juz Amma</h1>
-            <div id="status-audio" class="text-[10px] bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-400 uppercase tracking-widest">Audio Ready</div>
-        </div>
-        <div class="max-w-2xl mx-auto mt-4 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-            <div id="progress-bar" class="bg-emerald-500 h-full transition-all duration-1000" style="width: 0%"></div>
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl px-6 py-6 border-b border-slate-100">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-3xl font-extrabold tracking-tight">Juz Amma</h1>
+                <span id="status-tag" class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full uppercase">Online</span>
+            </div>
+            <div class="flex justify-between items-end mb-2">
+                <p id="progress-label" class="text-xs font-bold text-slate-400 uppercase tracking-widest">0/37 Surat</p>
+                <p id="percent-label" class="text-xs font-black text-emerald-600">0%</p>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div id="progress-bar" class="progress-bar bg-emerald-500 h-full w-0"></div>
+            </div>
         </div>
     </header>
 
     <main class="max-w-2xl mx-auto px-5 mt-6 space-y-4" id="surah-container"></main>
 
-    <div id="surah-modal" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/40 backdrop-blur-sm">
-        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[30px] h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="w-full flex justify-center py-4" onclick="closeModal()"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
-            <div class="px-6 pb-4 flex justify-between items-center border-b border-slate-50">
-                <button onclick="closeModal()" class="text-emerald-600 font-bold">Tutup</button>
-                <h3 id="modal-title" class="font-bold">Detail Surat</h3>
+    <div id="surah-modal" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/30 backdrop-blur-sm">
+        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[40px] h-[92vh] flex flex-col shadow-2xl">
+            <div class="w-full flex justify-center py-4" onclick="closeModal()">
+                <div class="w-10 h-1.5 bg-slate-200 rounded-full"></div>
+            </div>
+            <div class="px-8 pb-4 flex justify-between items-center border-b border-slate-50">
+                <button onclick="closeModal()" class="text-emerald-600 font-bold text-lg">Tutup</button>
+                <div class="text-center">
+                    <h3 id="modal-title" class="font-bold text-slate-900">Nama Surat</h3>
+                    <p id="modal-subtitle" class="text-[10px] text-slate-400 font-black tracking-widest uppercase mt-0.5"></p>
+                </div>
                 <div class="w-10"></div>
             </div>
             <div id="modal-body" class="p-6 overflow-y-auto flex-1 no-scrollbar space-y-8"></div>
@@ -53,21 +69,19 @@
     </div>
 
     <script>
-        // Gunakan player global yang di-init saat user klik tombol
-        let player = new Audio();
+        const player = new Audio();
+        const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
         let juzAmmaSurahs = [];
-        let completed = JSON.parse(localStorage.getItem('juz30_progress')) || [];
+        let completed = JSON.parse(localStorage.getItem('juz30_ios_final')) || [];
 
         function startApp() {
-            // Unlocking audio context untuk mobile browser
-            player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3"; // Load audio pendek (Al-Fatihah 1)
-            player.load();
+            player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
             player.play().then(() => {
-                player.pause(); // Langsung pause, hanya untuk memancing izin browser
+                player.pause();
                 document.getElementById('audio-init').classList.add('hidden');
                 init();
-            }).catch(err => {
-                document.getElementById('debug-msg').innerText = "Klik lagi! Browser masih memblokir.";
+            }).catch(() => {
+                alert("Mohon klik tombol sekali lagi untuk izin audio.");
             });
         }
 
@@ -78,7 +92,7 @@
                 juzAmmaSurahs = data.chapters.slice(77, 114);
                 render();
                 updateUI();
-            } catch (e) { alert("Cek koneksi internet."); }
+            } catch (e) { alert("Koneksi bermasalah."); }
         }
 
         function render() {
@@ -86,21 +100,23 @@
             container.innerHTML = "";
             juzAmmaSurahs.forEach((s, idx) => {
                 const isChecked = completed.includes(s.id) ? "checked" : "";
-                container.innerHTML += `
-                    <div class="ios-card p-5 flex items-center justify-between shadow-sm active:scale-[0.98] transition-all" onclick="if(event.target.type !== 'checkbox') openModal(${idx})">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center font-bold text-slate-400 text-sm">${s.id}</div>
-                            <div>
-                                <h4 class="font-bold text-slate-800">${s.name_simple}</h4>
-                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">${s.verses_count} Ayat</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="arabic text-xl text-emerald-600 font-bold">${s.name_arabic}</span>
-                            <input type="checkbox" class="w-6 h-6 rounded-full border-slate-300 text-emerald-500" ${isChecked} onchange="toggleHafal(${s.id}, this.checked, event)">
+                const div = document.createElement('div');
+                div.className = "ios-card p-5 flex items-center justify-between shadow-sm";
+                div.onclick = (e) => { if(e.target.type !== 'checkbox') openModal(idx); };
+                div.innerHTML = `
+                    <div class="flex items-center gap-5">
+                        <div class="w-11 h-11 bg-slate-50 rounded-2xl flex items-center justify-center font-bold text-slate-900 text-sm shadow-inner">${s.id}</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 tracking-tight">${s.name_simple}</h4>
+                            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">${s.verses_count} Ayat • ${s.translated_name.name}</p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-5">
+                        <span class="arabic text-2xl text-emerald-600 font-bold">${s.name_arabic}</span>
+                        <input type="checkbox" class="ios-checkbox" ${isChecked} onchange="toggleHafal(${s.id}, this.checked, event)">
+                    </div>
                 `;
+                container.appendChild(div);
             });
         }
 
@@ -109,36 +125,40 @@
             document.getElementById('surah-modal').classList.remove('hidden');
             setTimeout(() => document.getElementById('modal-content').classList.add('show'), 10);
             document.body.style.overflow = 'hidden';
+            
             document.getElementById('modal-title').innerText = s.name_simple;
+            document.getElementById('modal-subtitle').innerText = `${s.translated_name.name} | ${s.verses_count} Ayat`;
             
             const body = document.getElementById('modal-body');
-            body.innerHTML = `<div class="py-20 text-center font-bold text-emerald-500 animate-pulse">MEMUAT AYAT...</div>`;
+            body.innerHTML = `<div class="py-20 text-center font-bold text-emerald-500 animate-pulse text-xs tracking-[0.2em]">LOADING QURAN...</div>`;
 
             try {
-                // Gunakan API Tunggal untuk Ayat & Terjemahan
-                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/id.indonesian`);
+                // SINGLE FETCH: Ambil Arab, Indo, & Audio dalam satu kali panggil
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
                 const data = await res.json();
-                const resArabic = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}`);
-                const dataArabic = await resArabic.json();
-
-                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-3xl text-center text-slate-400 mb-10">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
                 
-                dataArabic.data.ayahs.forEach((v, i) => {
-                    // Gunakan sumber audio CDN yang paling reliable
-                    const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${v.number}.mp3`;
-                    
+                const arab = data.data[0].ayahs;
+                const indo = data.data[1].ayahs;
+                const audio = data.data[2].ayahs;
+
+                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-4xl text-center text-slate-300 my-10">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
+                
+                arab.forEach((v, i) => {
                     html += `
-                        <div class="p-4 transition-all duration-300" id="box-${i}">
+                        <div class="p-5 transition-all duration-300" id="box-${i}">
                             <div class="flex items-start justify-between gap-6">
-                                <button onclick="playAudio('${audioUrl}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center shadow-sm active:scale-90 transition-all text-xl">▶</button>
-                                <p class="arabic text-3xl leading-[4rem] text-slate-800">${v.text}</p>
+                                <button onclick="playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-11 h-11 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center shadow-sm active:scale-90 transition-all text-sm">▶</button>
+                                <p class="arabic text-3xl leading-[4.5rem] text-slate-900">${v.text}</p>
                             </div>
-                            <p class="text-[14px] text-slate-500 leading-relaxed mt-4 pl-16 font-medium">${data.data.ayahs[i].text}</p>
+                            <p class="text-[15px] text-slate-500 leading-relaxed mt-5 pl-1">${indo[i].text}</p>
+                            <div class="h-[0.5px] bg-slate-50 w-full mt-8"></div>
                         </div>
                     `;
                 });
                 body.innerHTML = html;
-            } catch (e) { body.innerHTML = "Gagal memuat. Periksa koneksi."; }
+            } catch (e) { 
+                body.innerHTML = `<p class="text-center text-red-500 font-bold py-20">Gagal memuat ayat. Periksa koneksi.</p>`;
+            }
         }
 
         function playAudio(url, index) {
@@ -146,17 +166,14 @@
             if (player.src === url && !player.paused) { stopAudio(); return; }
 
             stopAudio();
-            btn.innerText = "⏳";
+            btn.innerHTML = `<div class="w-4 h-4 border-2 border-emerald-500 border-t-transparent animate-spin rounded-full"></div>`;
             
             player.src = url;
             player.play().then(() => {
-                btn.innerText = "⏸";
-                btn.className = "w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg transition-all";
+                btn.innerHTML = `⏸`;
+                btn.className = "w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg transition-all scale-110 font-bold";
                 document.getElementById(`box-${index}`).classList.add('active-ayat');
-            }).catch(e => {
-                btn.innerText = "❌";
-                console.error("Audio Play Error:", e);
-            });
+            }).catch(() => stopAudio());
 
             player.onended = () => stopAudio();
         }
@@ -164,8 +181,8 @@
         function stopAudio() {
             player.pause();
             document.querySelectorAll('[id^="play-"]').forEach(b => {
-                b.innerText = "▶";
-                b.className = "w-12 h-12 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center shadow-sm";
+                b.innerHTML = "▶";
+                b.className = "w-11 h-11 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center shadow-sm transition-all text-sm";
             });
             document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('active-ayat'));
         }
@@ -180,14 +197,19 @@
             e.stopPropagation();
             if (check) { if(!completed.includes(id)) completed.push(id); }
             else { completed = completed.filter(i => i !== id); }
-            localStorage.setItem('juz30_progress', JSON.stringify(completed));
+            localStorage.setItem('juz30_ios_final', JSON.stringify(completed));
             updateUI();
+            
+            // Simpan ke Google Sheet kamu
+            fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ surahId: id, status: check ? "Hafal" : "Belum" }) });
         }
 
         function updateUI() {
-            const pct = Math.round((completed.length / 37) * 100);
+            const count = completed.length;
+            const pct = Math.round((count / 37) * 100);
             document.getElementById('progress-bar').style.width = `${pct}%`;
-            document.getElementById('progress-label').innerText = `${pct}% Hafal • ${completed.length}/37 Surat`;
+            document.getElementById('progress-label').innerText = `${count}/37 Surat Terhafal`;
+            document.getElementById('percent-label').innerText = `${pct}%`;
         }
     </script>
 </body>
