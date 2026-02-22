@@ -16,12 +16,13 @@
         .tab-btn { transition: 0.4s; position: relative; opacity: 0.4; font-size: 10px; font-weight: 800; cursor: pointer; z-index: 20; }
         .tab-btn.active { color: var(--gold-primary); opacity: 1; }
         .tab-btn.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 15px; height: 3px; background: var(--gold-primary); border-radius: 10px; }
-        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 18px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.1); transition: 0.2s; cursor: pointer; z-index: 5; }
-        .letter-card:active { transform: scale(0.9); background: var(--gold-light); }
+        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 18px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.1); transition: 0.2s; cursor: pointer; }
+        .active-ayat-box { background-color: rgba(197, 163, 88, 0.05); border-radius: 24px; padding: 20px; border-left: 4px solid var(--gold-primary); }
         .modal-sheet { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); z-index: 100; }
         .modal-sheet.show { transform: translateY(0); }
         #audio-init { position: fixed; inset: 0; z-index: 9999; background: #1A1A1A; display: flex; flex-direction: column; items-center; justify-content: center; }
-        .training-box { background: linear-gradient(to bottom, #ffffff, #f9f6f0); border: 2px dashed var(--gold-primary); position: relative; z-index: 5; }
+        .training-box { background: linear-gradient(to bottom, #ffffff, #f9f6f0); border: 2px dashed var(--gold-primary); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="pb-10">
@@ -32,7 +33,7 @@
             <span class="text-3xl animate-pulse">🕌</span>
         </div>
         <h2 class="text-xl font-bold text-[#E8D5A1] mb-10 tracking-[0.2em]">BISMILLAH</h2>
-        <button onclick="startApp()" id="btn-start" class="w-full max-w-[280px] py-5 bg-[#C5A358] text-white rounded-2xl font-black text-sm shadow-2xl active:scale-95 transition-all uppercase tracking-widest" style="z-index: 10000; position: relative;">
+        <button onclick="startApp()" class="w-full max-w-[280px] py-5 bg-[#C5A358] text-white rounded-2xl font-black text-sm shadow-2xl active:scale-95 transition-all uppercase tracking-widest">
             MULAI BELAJAR
         </button>
     </div>
@@ -48,9 +49,13 @@
         </div>
     </header>
 
-    <main class="max-w-2xl mx-auto px-6 mt-6 relative" style="z-index: 5;">
+    <main class="max-w-2xl mx-auto px-6 mt-6 relative z-10">
         <div id="section-juz" class="space-y-4"></div>
-        <div id="section-hijaiyah" class="hidden"><div class="grid grid-cols-4 gap-3" id="hijaiyah-container"></div></div>
+
+        <div id="section-hijaiyah" class="hidden">
+            <div class="grid grid-cols-4 gap-3" id="hijaiyah-container"></div>
+        </div>
+
         <div id="section-training" class="hidden space-y-8">
             <div class="training-box rounded-[40px] p-10 text-center shadow-inner">
                 <p class="text-[9px] font-black text-gold-primary tracking-[0.3em] mb-10 uppercase">Baca dari Kanan ke Kiri</p>
@@ -62,9 +67,14 @@
     </main>
 
     <div id="surah-modal" class="fixed inset-0 z-[100] flex items-end justify-center hidden bg-black/70 backdrop-blur-sm">
-        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[40px] h-[92vh] flex flex-col shadow-2xl">
-            <div class="w-full flex justify-center py-5" onclick="closeModal()"><div class="w-12 h-1 bg-slate-200 rounded-full"></div></div>
-            <div id="modal-body" class="p-8 overflow-y-auto flex-1 space-y-10"></div>
+        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[45px] h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="w-full flex justify-center py-5" onclick="closeModal()"><div class="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer"></div></div>
+            <div class="px-10 pb-6 flex justify-between items-center border-b border-slate-50">
+                <button onclick="closeModal()" class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">TUTUP</button>
+                <h3 id="modal-title" class="text-xl font-extrabold text-slate-900"></h3>
+                <div class="w-10"></div>
+            </div>
+            <div id="modal-body" class="p-8 overflow-y-auto flex-1 no-scrollbar space-y-10 scroll-smooth"></div>
         </div>
     </div>
 
@@ -84,16 +94,13 @@
         let currentPlayingIndex = -1;
         let isAutoplayMode = false;
 
-        // Fungsi Start yang diperbaiki
         function startApp() {
-            // Memancing audio agar diizinkan oleh browser
             player.src = "https://translate.google.com/translate_tts?ie=UTF-8&q=a&tl=ar&client=tw-ob";
             player.play().then(() => {
                 player.pause();
                 document.getElementById('audio-init').style.display = 'none';
                 init();
-            }).catch(e => {
-                // Jika masih gagal, paksa tutup overlay agar user bisa masuk
+            }).catch(() => {
                 document.getElementById('audio-init').style.display = 'none';
                 init();
             });
@@ -107,15 +114,16 @@
                 renderJuz();
                 renderHijaiyah();
                 generateTraining();
-            } catch (e) { console.log("Init Error"); }
+            } catch (e) { console.log("Load error"); }
         }
 
         function switchTab(tab) {
-            document.getElementById('section-juz').style.display = tab === 'juz' ? 'block' : 'none';
-            document.getElementById('section-hijaiyah').style.display = tab === 'hijaiyah' ? 'block' : 'none';
-            document.getElementById('section-training').style.display = tab === 'training' ? 'block' : 'none';
+            document.getElementById('section-juz').classList.toggle('hidden', tab !== 'juz');
+            document.getElementById('section-hijaiyah').classList.toggle('hidden', tab !== 'hijaiyah');
+            document.getElementById('section-training').classList.toggle('hidden', tab !== 'training');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('main-title').innerText = tab === 'juz' ? 'Juz Amma' : (tab === 'hijaiyah' ? 'Hijaiyah' : 'Latihan Baca');
             stopAudio();
         }
 
@@ -123,20 +131,20 @@
             const container = document.getElementById('section-juz');
             container.innerHTML = juzAmmaSurahs.map((s, idx) => `
                 <div class="royal-card p-6 flex items-center justify-between mb-4" onclick="openModal(${idx})">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center font-bold text-gold-primary text-[10px] border border-gold-light/20">${s.id}</div>
-                        <div class="font-bold text-slate-800">${s.name_simple}</div>
+                    <div class="flex items-center gap-6">
+                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-gold-primary text-xs border border-gold-light/20 shadow-inner">${s.id}</div>
+                        <div class="font-extrabold text-slate-800 text-lg">${s.name_simple}</div>
                     </div>
-                    <span class="arabic text-xl text-slate-600">${s.name_arabic}</span>
+                    <span class="arabic text-2xl text-slate-700 font-bold">${s.name_arabic}</span>
                 </div>`).join('');
         }
 
         function renderHijaiyah() {
             const container = document.getElementById('hijaiyah-container');
             container.innerHTML = hijaiyahData.map(item => `
-                <div class="letter-card p-4" onclick="playVoice('${item.h}')">
+                <div class="letter-card" onclick="playVoice('${item.h}')">
                     <span class="arabic text-3xl font-bold text-slate-800">${item.h}</span>
-                    <span class="text-[9px] font-bold text-gold-primary uppercase mt-1">${item.n}</span>
+                    <span class="text-[9px] font-black text-gold-primary uppercase mt-1">${item.n}</span>
                 </div>`).join('');
         }
 
@@ -149,36 +157,46 @@
         function generateTraining() {
             let selected = [];
             for(let i=0; i<3; i++) selected.push(hijaiyahData[Math.floor(Math.random() * hijaiyahData.length)]);
-            document.getElementById('display-training').innerHTML = selected.map(s => `<span onclick="playVoice('${s.h}')">${s.h}</span>`).join('');
+            document.getElementById('display-training').innerHTML = selected.map(s => `<span onclick="playVoice('${s.h}')" class="cursor-pointer hover:text-gold-primary">${s.h}</span>`).join('');
             document.getElementById('display-latin').innerText = selected.map(s => s.n.toLowerCase()).join(' - ');
         }
 
         async function openModal(index) {
             const s = juzAmmaSurahs[index];
-            const modal = document.getElementById('surah-modal');
-            modal.classList.remove('hidden');
+            document.getElementById('surah-modal').classList.remove('hidden');
             setTimeout(() => document.getElementById('modal-content').classList.add('show'), 10);
             const body = document.getElementById('modal-body');
+            document.getElementById('modal-title').innerText = s.name_simple;
             body.innerHTML = `<div class="py-20 text-center text-gold-primary animate-pulse text-xs tracking-[0.4em]">MEMUAT...</div>`;
 
             try {
-                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,ar.alafasy`);
+                // Fetch Arab, Terjemahan, dan Audio sekaligus
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
                 const data = await res.json();
                 const arab = data.data[0].ayahs;
-                const audio = data.data[1].ayahs;
+                const indo = data.data[1].ayahs;
+                const audio = data.data[2].ayahs;
 
-                let html = `<button onclick="playFullSurah()" class="w-full mb-6 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-[10px] tracking-widest">▶ PUTAR SATU SURAT</button>`;
+                let html = `<button onclick="playFullSurah()" class="w-full mb-6 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-[10px] tracking-[0.2em]">▶ PUTAR SATU SURAT</button>`;
+                html += (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-2xl text-center text-gold-primary my-8 opacity-80">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
+                
                 arab.forEach((v, i) => {
+                    let textArab = v.text;
+                    if (i === 0 && s.id !== 1 && s.id !== 9) textArab = textArab.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, "");
                     html += `
-                        <div class="mb-8" id="box-${i}" data-audio="${audio[i].audio}">
-                            <div class="flex justify-between items-start gap-4">
-                                <button onclick="isAutoplayMode=false; playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-10 h-10 rounded-xl bg-gold-light/10 text-gold-primary flex-shrink-0 flex items-center justify-center font-bold text-xs">▶</button>
-                                <p class="arabic text-3xl leading-[3.5rem] text-right text-slate-800">${v.text}</p>
+                        <div class="transition-all duration-500" id="box-${i}" data-audio="${audio[i].audio}">
+                            <div class="flex flex-col gap-5">
+                                <div class="flex justify-between items-center">
+                                    <button onclick="isAutoplayMode=false; playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm font-bold text-sm">▶</button>
+                                    <span class="text-[9px] font-black text-slate-300 tracking-widest uppercase">Ayat ${i+1}</span>
+                                </div>
+                                <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900">${textArab}</p>
+                                <p class="text-[14px] text-slate-500 leading-relaxed text-left border-l-2 border-gold-light/30 pl-4 italic">${indo[i].text}</p>
                             </div>
                         </div>`;
                 });
                 body.innerHTML = html;
-            } catch (e) { body.innerHTML = "Error."; }
+            } catch (e) { body.innerHTML = "Error loading surah."; }
         }
 
         function playAudio(url, index) {
@@ -189,8 +207,10 @@
             player.play().then(() => {
                 if(btn) {
                     btn.innerHTML = `⏸`;
-                    btn.classList.add('bg-gold-primary', 'text-white');
+                    btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg transition-all scale-110";
                 }
+                document.getElementById(`box-${index}`).classList.add('active-ayat-box');
+                document.getElementById(`box-${index}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         }
 
@@ -209,8 +229,9 @@
             player.pause();
             document.querySelectorAll('[id^="play-"]').forEach(b => {
                 b.innerHTML = "▶";
-                b.classList.remove('bg-gold-primary', 'text-white');
+                b.className = "w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm";
             });
+            document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('active-ayat-box'));
         }
 
         function closeModal() {
