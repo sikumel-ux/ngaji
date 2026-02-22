@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Al-Quran Premium - Juz Amma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold-primary: #C5A358; --gold-light: #E8D5A1; --dark-royal: #1A1A1A; --bg-marble: #FDFDFB; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-marble); color: var(--dark-royal); overflow-x: hidden; }
+        .arabic { font-family: 'Amiri', serif; direction: rtl; }
+        .islami-pattern { background-image: url('https://www.transparenttextures.com/patterns/islamic-art.png'); opacity: 0.03; position: fixed; inset: 0; pointer-events: none; }
+        .royal-card { background: white; border-radius: 24px; border: 1px solid rgba(197, 163, 88, 0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.03); transition: all 0.3s ease; cursor: pointer; }
+        .royal-card:active { transform: scale(0.97); }
+        .gold-header { background: linear-gradient(135deg, #1A1A1A 0%, #333333 100%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .gold-progress { background: linear-gradient(90deg, var(--gold-primary), var(--gold-light)); box-shadow: 0 0 10px rgba(197, 163, 88, 0.4); }
+        .modal-sheet { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); }
+        .modal-sheet.show { transform: translateY(0); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .ios-checkbox { appearance: none; width: 28px; height: 28px; border: 2px solid var(--gold-light); border-radius: 50%; position: relative; cursor: pointer; transition: 0.3s; }
+        .ios-checkbox:checked { background: var(--gold-primary); border-color: var(--gold-primary); }
+        .ios-checkbox:checked::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: bold; }
+        .active-ayat-box { background-color: rgba(197, 163, 88, 0.05); border-radius: 24px; padding: 20px; border-left: 4px solid var(--gold-primary); }
+    </style>
+</head>
+<body class="pb-10">
+    <div class="islami-pattern"></div>
+
+    <div id="audio-init" class="fixed inset-0 z-[60] bg-[#1A1A1A] flex flex-col items-center justify-center p-10 text-center">
+        <div class="w-24 h-24 border-2 border-[#C5A358] rounded-full flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(197,163,88,0.3)]">
+            <span class="text-4xl animate-pulse">🕌</span>
+        </div>
+        <h2 class="text-2xl font-bold text-[#E8D5A1] mb-2 italic tracking-widest">Ahlan wa Sahlan</h2>
+        <p class="text-slate-400 text-sm mb-10 leading-relaxed">Ketuk untuk membuka Mushaf & mengaktifkan Murottal</p>
+        <button onclick="startApp()" class="w-full max-w-xs py-4 bg-[#C5A358] text-white rounded-2xl font-bold shadow-2xl tracking-[0.2em] active:scale-95 transition-all">
+            MULAI MENGAJI
+        </button>
+    </div>
+
+    <header class="gold-header px-8 pt-12 pb-16 text-white relative shadow-2xl">
+        <div class="max-w-2xl mx-auto relative z-10">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight">Juz Amma</h1>
+                    <p class="text-gold-light text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Premium Recitation</p>
+                </div>
+                <div class="text-4xl opacity-40 font-arabic">﷽</div>
+            </div>
+            
+            <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+                <div class="flex justify-between items-end mb-3">
+                    <span id="progress-label" class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">0/37 Surat Terhafal</span>
+                    <span id="percent-label" class="text-2xl font-black text-gold-primary">0%</span>
+                </div>
+                <div class="w-full bg-black/20 h-2 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="gold-progress h-full w-0 transition-all duration-1000"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-6 -mt-8 relative z-20 space-y-4" id="surah-container"></main>
+
+    <div id="surah-modal" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/70 backdrop-blur-sm">
+        <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[45px] h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="w-full flex justify-center py-5" onclick="closeModal()">
+                <div class="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer"></div>
+            </div>
+            
+            <div class="px-10 pb-6 flex justify-between items-center border-b border-slate-50">
+                <button onclick="closeModal()" class="text-slate-400 font-bold text-xs tracking-widest">TUTUP</button>
+                <div class="text-center">
+                    <h3 id="modal-title" class="text-xl font-extrabold text-slate-900 tracking-tight">Nama Surat</h3>
+                    <p id="modal-subtitle" class="text-[10px] text-gold-primary font-black tracking-widest uppercase mt-1"></p>
+                </div>
+                <div class="w-10"></div>
+            </div>
+
+            <div id="modal-body" class="p-8 overflow-y-auto flex-1 no-scrollbar space-y-10 scroll-smooth"></div>
+        </div>
+    </div>
+
+    <script>
+        const player = new Audio();
+        const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
+        let juzAmmaSurahs = [];
+        let completed = JSON.parse(localStorage.getItem('juz30_royal_v2')) || [];
+        let currentPlayingIndex = -1;
+
+        function startApp() {
+            player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
+            player.play().then(() => {
+                player.pause();
+                document.getElementById('audio-init').classList.add('hidden');
+                init();
+            });
+        }
+
+        async function init() {
+            try {
+                const res = await fetch("https://api.quran.com/api/v4/chapters?language=id");
+                const data = await res.json();
+                juzAmmaSurahs = data.chapters.slice(77, 114);
+                render();
+                updateUI();
+            } catch (e) { console.log("Error loading chapters"); }
+        }
+
+        function render() {
+            const container = document.getElementById('surah-container');
+            container.innerHTML = "";
+            juzAmmaSurahs.forEach((s, idx) => {
+                const isChecked = completed.includes(s.id) ? "checked" : "";
+                const div = document.createElement('div');
+                div.className = "royal-card p-6 flex items-center justify-between";
+                div.onclick = (e) => { if(e.target.type !== 'checkbox') openModal(idx); };
+                div.innerHTML = `
+                    <div class="flex items-center gap-6">
+                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-gold-primary text-xs border border-gold-light/20 shadow-inner">${s.id}</div>
+                        <div>
+                            <h4 class="font-extrabold text-slate-800 text-lg tracking-tight">${s.name_simple}</h4>
+                            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">${s.translated_name.name}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span class="arabic text-2xl text-slate-700 font-bold">${s.name_arabic}</span>
+                        <input type="checkbox" class="ios-checkbox" ${isChecked} onchange="toggleHafal(${s.id}, this.checked, event)">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function openModal(index) {
+            const s = juzAmmaSurahs[index];
+            document.getElementById('surah-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modal-content').classList.add('show'), 10);
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('modal-title').innerText = s.name_simple;
+            document.getElementById('modal-subtitle').innerText = `${s.verses_count} Ayat • Misyari Rasyid`;
+            
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `<div class="py-20 text-center text-gold-primary font-black animate-pulse text-xs tracking-[0.4em]">FATHUL MUSHAF...</div>`;
+
+            try {
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
+                const data = await res.json();
+                
+                const arab = data.data[0].ayahs;
+                const indo = data.data[1].ayahs;
+                const audio = data.data[2].ayahs;
+
+                // Tombol Putar Full Surat
+                let html = `<button onclick="playFullSurah()" class="w-full mb-6 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-[10px] tracking-[0.2em] active:scale-95 transition-all">▶ PUTAR SATU SURAT</button>`;
+
+                // Header Bismillah (Kecil & Elegan)
+                html += (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-2xl text-center text-gold-primary my-8 opacity-80 font-light">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
+                
+                arab.forEach((v, i) => {
+                    let textArab = v.text;
+                    // Bersihkan Bismillah dari Ayat 1 (Selain Fatihah)
+                    if (i === 0 && s.id !== 1 && s.id !== 9) {
+                        textArab = textArab.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, "");
+                    }
+
+                    html += `
+                        <div class="transition-all duration-500" id="box-${i}" data-audio="${audio[i].audio}">
+                            <div class="flex flex-col gap-5">
+                                <div class="flex justify-between items-center">
+                                    <button onclick="playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm active:scale-90 transition-all font-bold text-sm">▶</button>
+                                    <span class="text-[9px] font-black text-slate-300 tracking-widest uppercase italic">Ayat ${i+1}</span>
+                                </div>
+                                <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900 font-medium">${textArab}</p>
+                                <p class="text-[14px] text-slate-500 leading-relaxed font-medium text-left border-l-2 border-gold-light/30 pl-4 italic">${indo[i].text}</p>
+                            </div>
+                        </div>`;
+                });
+                body.innerHTML = html;
+            } catch (e) { body.innerHTML = "Gagal memuat."; }
+        }
+
+        function playAudio(url, index) {
+            const btn = document.getElementById(`play-${index}`);
+            if (player.src === url && !player.paused) { stopAudio(); return; }
+
+            stopAudio();
+            currentPlayingIndex = index;
+            btn.innerHTML = `<div class="w-4 h-4 border-2 border-gold-primary border-t-transparent animate-spin rounded-full"></div>`;
+            
+            player.src = url;
+            player.play().then(() => {
+                btn.innerHTML = `⏸`;
+                btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg transition-all scale-110";
+                const activeBox = document.getElementById(`box-${index}`);
+                activeBox.classList.add('active-ayat-box');
+                activeBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
+        // Logic Autoplay
+        player.onended = () => {
+            const nextIndex = currentPlayingIndex + 1;
+            const nextBox = document.getElementById(`box-${nextIndex}`);
+            if (nextBox) {
+                playAudio(nextBox.getAttribute('data-audio'), nextIndex);
+            } else {
+                stopAudio();
+            }
+        };
+
+        function playFullSurah() {
+            const firstBox = document.getElementById('box-0');
+            if (firstBox) playAudio(firstBox.getAttribute('data-audio'), 0);
+        }
+
+        function stopAudio() {
+            player.pause();
+            document.querySelectorAll('[id^="play-"]').forEach(b => {
+                b.innerHTML = "▶";
+                b.className = "w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm";
+            });
+            document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('active-ayat-box'));
+        }
+
+        function closeModal() {
+            stopAudio();
+            document.getElementById('modal-content').classList.remove('show');
+            setTimeout(() => { document.getElementById('surah-modal').classList.add('hidden'); document.body.style.overflow = ''; }, 500);
+        }
+
+        function toggleHafal(id, check, e) {
+            e.stopPropagation();
+            if (check) { if(!completed.includes(id)) completed.push(id); }
+            else { completed = completed.filter(i => i !== id); }
+            localStorage.setItem('juz30_royal_v2', JSON.stringify(completed));
+            updateUI();
+            fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ surahId: id, status: check ? "Hafal" : "Belum" }) });
+        }
+
+        function updateUI() {
+            const pct = Math.round((completed.length / 37) * 100);
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-label').innerText = `${completed.length}/37 Surat Terhafal`;
+            document.getElementById('percent-label').innerText = `${pct}%`;
+        }
+    </script>
+</body>
+</html>
