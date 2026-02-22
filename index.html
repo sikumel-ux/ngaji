@@ -2,70 +2,143 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juz Amma Learning App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juz Amma - Modern iOS Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --emerald-ios: #34C759;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--ios-bg);
+            color: #1C1C1E;
+            -webkit-tap-highlight-color: transparent;
+        }
         .arabic { 
             font-family: 'Amiri', serif; 
             direction: rtl; 
-            text-align: right;
         }
-        .scroll-container::-webkit-scrollbar { width: 6px; }
-        .scroll-container::-webkit-scrollbar-track { background: #f1f5f9; }
-        .scroll-container::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-        .active-ayat { background-color: #f0fdf4; border-left: 4px solid #10b981; }
-        @keyframes pulse-emerald {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        /* Efek Glassmorphism Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
-        .loading-audio { animation: pulse-emerald 1s infinite; }
+        /* iOS Card Style */
+        .ios-card {
+            background: var(--ios-card);
+            border-radius: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 0.5px solid rgba(0,0,0,0.05);
+        }
+        .ios-card:active {
+            transform: scale(0.97);
+            background: #F2F2F7;
+        }
+        /* Progress Bar iOS Style */
+        .progress-container {
+            height: 8px;
+            background: #E5E5EA;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34C759, #30B0C7);
+            border-radius: 10px;
+            transition: width 0.8s ease-out;
+        }
+        /* Modal Animation */
+        .modal-active {
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Custom Checkbox iOS */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border: 2px solid #D1D1D6;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #34C759;
+            border-color: #34C759;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            font-size: 16px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-10">
+<body class="pb-20">
 
-    <header class="bg-emerald-600 text-white p-8 shadow-lg text-center mb-6">
-        <h1 class="text-3xl font-bold">📖 Juz Amma Learner</h1>
-        <p class="text-emerald-100 mt-2">Hafalan & Muraja'ah Interaktif</p>
-    </header>
-
-    <main class="max-w-2xl mx-auto px-4">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 mb-8">
-            <div class="flex justify-between items-end mb-2">
-                <h2 class="text-sm font-bold text-emerald-800 uppercase tracking-widest">Progres Hafalan</h2>
-                <span id="progress-text" class="text-xs font-semibold text-emerald-600">0/37 Surat</span>
+    <header class="glass-header sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-2xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Juz Amma</h1>
+                <p id="progress-label" class="text-xs font-medium text-slate-500 uppercase tracking-widest mt-0.5">0% Hafal</p>
             </div>
-            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                <div id="progress-bar" class="bg-emerald-500 h-full transition-all duration-700 w-0"></div>
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <span class="text-emerald-600 text-lg">🌿</span>
             </div>
         </div>
+        <div class="max-w-2xl mx-auto mt-4">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+    </header>
 
-        <div id="surah-container" class="space-y-4">
-            <div class="flex flex-col items-center py-20 text-slate-400">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-4"></div>
-                <p>Menyiapkan Mushaf...</p>
+    <main class="max-w-2xl mx-auto px-5 mt-6">
+        <div id="surah-container" class="grid grid-cols-1 gap-4">
+            <div class="py-20 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent mb-4"></div>
+                <p class="text-slate-400 font-medium">Memuat Mushaf Modern...</p>
             </div>
         </div>
     </main>
 
-    <div id="surah-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div class="p-5 border-b flex justify-between items-center bg-emerald-600 text-white">
-                <div>
-                    <h3 id="modal-title" class="text-xl font-bold">Nama Surat</h3>
-                    <p id="modal-subtitle" class="text-xs opacity-80 uppercase tracking-tighter"></p>
+    <div id="surah-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center hidden bg-black/40 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl sm:rounded-[30px] rounded-t-[30px] h-[92vh] flex flex-col modal-active shadow-2xl">
+            <div class="p-6 flex justify-between items-center border-b border-slate-50">
+                <button onclick="closeModal()" class="text-emerald-600 font-semibold text-lg hover:opacity-70">Tutup</button>
+                <div class="text-center">
+                    <h3 id="modal-title" class="font-bold text-lg text-slate-900 leading-tight">Detail Surat</h3>
+                    <p id="modal-subtitle" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
                 </div>
-                <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-700 transition-colors text-2xl font-light">&times;</button>
-            </div>
+                <div class="w-10"></div> </div>
 
-            <div id="modal-body" class="p-6 overflow-y-auto flex-1 scroll-container space-y-8 bg-white">
+            <div id="modal-body" class="p-6 overflow-y-auto flex-1 no-scrollbar space-y-10">
                 </div>
 
-            <div class="p-4 border-t bg-slate-50 flex justify-between">
-                <button id="prev-btn" onclick="navSurah(-1)" class="px-5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
-                <button id="next-btn" onclick="navSurah(1)" class="px-5 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
+            <div class="p-6 pb-10 bg-white border-t border-slate-50 flex justify-between items-center">
+                <button id="prev-btn" onclick="navSurah(-1)" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform disabled:opacity-30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <p class="text-slate-300 font-bold tracking-widest text-[10px]">SWIPE DOWN TO CLOSE</p>
+                <button id="next-btn" onclick="navSurah(1)" class="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-90 transition-transform disabled:opacity-30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
             </div>
         </div>
     </div>
@@ -75,11 +148,10 @@
         const GAS_API = "https://script.google.com/macros/s/AKfycbylmGdPjCCjw1X3b_Niixqe2QnysK7WxYhxFU1EH43QpinIBaeVZcwzuCDQZNqRjPYvNA/exec";
         
         let juzAmmaSurahs = [];
-        let completed = JSON.parse(localStorage.getItem('juz30_progress')) || [];
+        let completed = JSON.parse(localStorage.getItem('juz30_ios_progress')) || [];
         let activeIndex = -1;
-        let currentAudio = new Audio(); // Reusable audio object
+        let currentAudio = new Audio();
 
-        // 1. Inisialisasi Data
         async function init() {
             try {
                 const res = await fetch(`${API_BASE}/chapters?language=id`);
@@ -88,38 +160,34 @@
                 render();
                 updateUI();
             } catch (e) {
-                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500">Gagal terhubung ke server. Periksa internet Anda.</p>`;
+                console.error(e);
             }
         }
 
-        // 2. Tampilkan Daftar Surat
         function render() {
             const container = document.getElementById('surah-container');
             container.innerHTML = "";
             juzAmmaSurahs.forEach((s, idx) => {
                 const isChecked = completed.includes(s.id) ? "checked" : "";
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer";
+                div.className = "ios-card p-5 flex items-center justify-between";
                 div.innerHTML = `
-                    <div class="flex-1 flex items-center gap-4" onclick="openModal(${idx})">
-                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-sm underline decoration-emerald-200">${s.id}</div>
+                    <div class="flex items-center gap-5 flex-1" onclick="openModal(${idx})">
+                        <div class="w-11 h-11 bg-slate-50 text-slate-900 rounded-[14px] flex items-center justify-center font-bold text-sm shadow-inner italic">${s.id}</div>
                         <div>
-                            <h4 class="font-bold text-slate-800 tracking-tight">${s.name_simple}</h4>
-                            <p class="text-xs text-slate-400 font-medium">${s.translated_name.name} • ${s.verses_count} Ayat</p>
+                            <h4 class="font-bold text-[17px] text-slate-900 tracking-tight">${s.name_simple}</h4>
+                            <p class="text-[13px] text-slate-400 font-medium">${s.translated_name.name} • ${s.verses_count} Ayat</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="arabic text-xl text-slate-700 font-bold">${s.name_arabic}</span>
-                        <input type="checkbox" ${isChecked} 
-                            class="w-6 h-6 rounded-md border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer" 
-                            onchange="toggleHafal(${s.id}, this.checked, event)">
+                        <span class="arabic text-2xl text-emerald-600 font-bold">${s.name_arabic}</span>
+                        <input type="checkbox" ${isChecked} onchange="toggleHafal(${s.id}, this.checked, event)">
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // 3. Kontrol Modal & Audio
         async function openModal(index) {
             activeIndex = index;
             const s = juzAmmaSurahs[index];
@@ -131,8 +199,8 @@
             document.body.style.overflow = 'hidden';
             
             document.getElementById('modal-title').innerText = s.name_simple;
-            document.getElementById('modal-subtitle').innerText = `${s.translated_name.name} | ${s.verses_count} Ayat`;
-            body.innerHTML = `<div class="flex flex-col items-center py-20 text-emerald-500 italic">Membuka lembaran surat...</div>`;
+            document.getElementById('modal-subtitle').innerText = `${s.translated_name.name} • ${s.verses_count} Ayat`;
+            body.innerHTML = `<div class="flex justify-center py-20 animate-pulse text-emerald-500 font-bold tracking-widest text-xs">MENGUNDUH AYAT...</div>`;
 
             try {
                 const [resA, resI] = await Promise.all([
@@ -142,30 +210,30 @@
                 const dataA = await resA.json();
                 const dataI = await resI.json();
 
-                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-3xl text-center text-emerald-600 mb-10 font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
+                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-4xl text-center text-slate-900 mb-12 opacity-80">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
                 
                 dataA.verses.forEach((v, i) => {
                     const audioUrl = `https://verses.quran.com/Mishari_Rashid_Alafasy/mp3/${String(s.id).padStart(3, '0')}${String(i+1).padStart(3, '0')}.mp3`;
-                    
                     html += `
-                        <div class="pb-6 border-b border-slate-100 transition-all duration-300 p-3 rounded-lg" id="ayat-box-${i}">
-                            <div class="flex justify-between items-start gap-4 mb-4">
-                                <div class="flex flex-col gap-3">
-                                    <span class="text-xs font-bold bg-slate-100 text-slate-400 w-7 h-7 rounded-full flex items-center justify-center">${i+1}</span>
-                                    <button onclick="playAudio('${audioUrl}', ${i})" id="btn-play-${i}" class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>
+                        <div class="space-y-4" id="ayat-box-${i}">
+                            <div class="flex items-start justify-between gap-6">
+                                <div class="flex flex-col gap-4">
+                                    <span class="text-[10px] font-black bg-slate-100 text-slate-400 w-6 h-6 rounded-md flex items-center justify-center">${i+1}</span>
+                                    <button onclick="playAudio('${audioUrl}', ${i})" id="btn-play-${i}" class="w-10 h-10 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-sm active:scale-90">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                     </button>
                                 </div>
-                                <p class="arabic text-3xl leading-[4rem] text-slate-800">${v.text_uthmani}</p>
+                                <p class="arabic text-4xl leading-[4.5rem] text-slate-900">${v.text_uthmani}</p>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed">${dataI.translations[i].text}</p>
+                            <p class="text-[15px] text-slate-500 leading-relaxed font-medium pl-14">${dataI.translations[i].text}</p>
+                            <div class="h-[0.5px] bg-slate-100 w-full mt-8"></div>
                         </div>
                     `;
                 });
                 body.innerHTML = html;
                 updateNavButtons();
             } catch (e) {
-                body.innerHTML = `<p class="text-center text-red-500">Gagal memuat ayat.</p>`;
+                body.innerHTML = `<p class="text-center text-red-500 font-bold">Gagal memuat. Periksa koneksi.</p>`;
             }
         }
 
@@ -174,31 +242,32 @@
             const btn = document.getElementById(`btn-play-${index}`);
             const box = document.getElementById(`ayat-box-${index}`);
             
-            // Visual loading
-            btn.classList.add('loading-audio', 'bg-emerald-500', 'text-white');
+            btn.innerHTML = `<div class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>`;
             box.classList.add('active-ayat');
 
             currentAudio.src = url;
             currentAudio.play().then(() => {
-                btn.classList.remove('loading-audio');
-            }).catch(err => {
-                console.error("Audio error:", err);
-                alert("Klik sekali lagi untuk memutar.");
-                stopAudio();
+                btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+                btn.classList.replace('bg-slate-50', 'bg-emerald-500');
+                btn.classList.add('text-white');
             });
 
             currentAudio.onended = () => {
                 box.classList.remove('active-ayat');
-                btn.classList.remove('bg-emerald-500', 'text-white');
+                btn.classList.replace('bg-emerald-500', 'bg-slate-50');
+                btn.classList.remove('text-white');
+                btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
             };
         }
 
         function stopAudio() {
-            if (currentAudio) {
-                currentAudio.pause();
-            }
+            currentAudio.pause();
             document.querySelectorAll('[id^="ayat-box-"]').forEach(el => el.classList.remove('active-ayat'));
-            document.querySelectorAll('[id^="btn-play-"]').forEach(el => el.classList.remove('bg-emerald-500', 'text-white', 'loading-audio'));
+            document.querySelectorAll('[id^="btn-play-"]').forEach(btn => {
+                btn.classList.replace('bg-emerald-500', 'bg-slate-50');
+                btn.classList.remove('text-white');
+                btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+            });
         }
 
         function closeModal() {
@@ -217,7 +286,6 @@
             document.getElementById('next-btn').disabled = activeIndex === juzAmmaSurahs.length - 1;
         }
 
-        // 4. Progress & API GAS
         function toggleHafal(id, isChecked, event) {
             event.stopPropagation();
             if (isChecked) {
@@ -225,24 +293,15 @@
             } else {
                 completed = completed.filter(item => item !== id);
             }
-            localStorage.setItem('juz30_progress', JSON.stringify(completed));
+            localStorage.setItem('juz30_ios_progress', JSON.stringify(completed));
             updateUI();
-
-            fetch(GAS_API, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ 
-                    surahId: id, 
-                    status: isChecked ? "Hafal" : "Belum", 
-                    time: new Date().toLocaleString('id-ID') 
-                })
-            });
+            fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ surahId: id, status: isChecked ? "Hafal" : "Belum" }) });
         }
 
         function updateUI() {
-            const pct = (completed.length / 37) * 100;
+            const pct = Math.round((completed.length / 37) * 100);
             document.getElementById('progress-bar').style.width = `${pct}%`;
-            document.getElementById('progress-text').innerText = `${completed.length}/37 Surat`;
+            document.getElementById('progress-label').innerText = `${pct}% Hafal • ${completed.length}/37 Surat`;
         }
 
         init();
