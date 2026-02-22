@@ -121,7 +121,7 @@
                 const audio = data.data[2].ayahs;
 
                 // Tampilkan Bismillah hanya jika bukan surat ke-1 (Al-Fatihah) atau ke-9 (At-Taubah)
-                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-5xl text-center text-gold-primary my-16 opacity-80 font-light">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
+                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-2xl text-center text-gold-primary my-16 opacity-80 font-light">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
                 
                 arab.forEach((v, i) => {
                     let textArab = v.text;
