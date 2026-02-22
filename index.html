@@ -12,19 +12,15 @@
         .arabic { font-family: 'Amiri', serif; direction: rtl; }
         .islami-pattern { background-image: url('https://www.transparenttextures.com/patterns/islamic-art.png'); opacity: 0.03; position: fixed; inset: 0; pointer-events: none; }
         .royal-card { background: white; border-radius: 24px; border: 1px solid rgba(197, 163, 88, 0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.03); transition: all 0.3s ease; cursor: pointer; }
-        .royal-card:active { transform: scale(0.97); }
         .gold-header { background: linear-gradient(135deg, #1A1A1A 0%, #333333 100%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
         .tab-btn { transition: all 0.4s; position: relative; opacity: 0.5; }
         .tab-btn.active { color: var(--gold-primary); opacity: 1; }
         .tab-btn.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; background: var(--gold-primary); border-radius: 10px; }
         .hijaiyah-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 20px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.15); transition: all 0.2s; cursor: pointer; text-align: center; }
+        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 20px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.15); transition: all 0.2s; cursor: pointer; }
         .letter-card:active { background: var(--gold-light); transform: scale(0.9); }
-        .modal-sheet { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); }
-        .modal-sheet.show { transform: translateY(0); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         .active-ayat-box { background-color: rgba(197, 163, 88, 0.05); border-radius: 24px; padding: 20px; border-left: 4px solid var(--gold-primary); }
-        .ios-checkbox { appearance: none; width: 28px; height: 28px; border: 2px solid var(--gold-light); border-radius: 50%; position: relative; cursor: pointer; transition: 0.3s; }
+        .ios-checkbox { appearance: none; width: 28px; height: 28px; border: 2px solid var(--gold-light); border-radius: 50%; position: relative; cursor: pointer; }
         .ios-checkbox:checked { background: var(--gold-primary); border-color: var(--gold-primary); }
         .ios-checkbox:checked::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: bold; }
     </style>
@@ -36,11 +32,8 @@
         <div class="w-24 h-24 border-2 border-[#C5A358] rounded-full flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(197,163,88,0.3)]">
             <span class="text-4xl animate-pulse">🕌</span>
         </div>
-        <h2 class="text-2xl font-bold text-[#E8D5A1] mb-2 italic tracking-widest">Bismillah</h2>
-        <p class="text-slate-400 text-sm mb-10 leading-relaxed">Aktifkan Murottal & Belajar Hijaiyah</p>
-        <button onclick="startApp()" class="w-full max-w-xs py-4 bg-[#C5A358] text-white rounded-2xl font-bold shadow-2xl tracking-[0.2em] active:scale-95 transition-all">
-            MULAI
-        </button>
+        <h2 class="text-2xl font-bold text-[#E8D5A1] mb-2 italic">Bismillah</h2>
+        <button onclick="startApp()" class="w-full max-w-xs py-4 bg-[#C5A358] text-white rounded-2xl font-bold tracking-[0.2em] active:scale-95 transition-all">MULAI</button>
     </div>
 
     <header class="gold-header px-8 pt-12 pb-14 text-white relative shadow-2xl">
@@ -67,9 +60,7 @@
 
     <main class="max-w-2xl mx-auto px-6 mt-8 relative z-20">
         <div id="section-juz" class="space-y-4"></div>
-        <div id="section-hijaiyah" class="hidden">
-            <div class="hijaiyah-grid" id="hijaiyah-container"></div>
-        </div>
+        <div id="section-hijaiyah" class="hidden"><div class="hijaiyah-grid" id="hijaiyah-container"></div></div>
     </main>
 
     <div id="surah-modal" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/70 backdrop-blur-sm">
@@ -88,27 +79,25 @@
         const player = new Audio();
         const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
         
+        // Hijaiyah Data dengan ID yang tepat untuk Audio
         const hijaiyahData = [
-            {h: 'أ', n: 'Alif'}, {h: 'ب', n: 'Ba'}, {h: 'ت', n: 'Ta'}, {h: 'ث', n: 'Tsa'},
-            {h: 'ج', n: 'Jim'}, {h: 'ح', n: 'Ha'}, {h: 'خ', n: 'Kho'}, {h: 'د', n: 'Dal'},
-            {h: 'ذ', n: 'Dzal'}, {h: 'ر', n: 'Ro'}, {h: 'ز', n: 'Zay'}, {h: 'س', n: 'Sin'},
-            {h: 'ش', n: 'Syin'}, {h: 'ص', n: 'Shod'}, {h: 'ض', n: 'Dhod'}, {h: 'ط', n: 'Tho'},
-            {h: 'ظ', n: 'Zho'}, {h: 'ع', n: 'Ain'}, {h: 'غ', n: 'Gho'}, {h: 'ف', n: 'Fa'},
-            {h: 'ق', n: 'Qof'}, {h: 'ك', n: 'Kaf'}, {h: 'ل', n: 'Lam'}, {h: 'م', n: 'Mim'},
-            {h: 'ن', n: 'Nun'}, {h: 'و', n: 'Wau'}, {h: 'هـ', n: 'Haa'}, {h: 'ي', n: 'Ya'}
+            {h: 'أ', n: 'Alif', id: 1}, {h: 'ب', n: 'Ba', id: 2}, {h: 'ت', n: 'Ta', id: 3}, {h: 'ث', n: 'Tsa', id: 4},
+            {h: 'ج', n: 'Jim', id: 5}, {h: 'ح', n: 'Ha', id: 6}, {h: 'خ', n: 'Kho', id: 7}, {h: 'د', n: 'Dal', id: 8},
+            {h: 'ذ', n: 'Dzal', id: 9}, {h: 'ر', n: 'Ro', id: 10}, {h: 'ز', n: 'Zay', id: 11}, {h: 'س', n: 'Sin', id: 12},
+            {h: 'ش', n: 'Syin', id: 13}, {h: 'ص', n: 'Shod', id: 14}, {h: 'ض', n: 'Dhod', id: 15}, {h: 'ط', n: 'Tho', id: 16},
+            {h: 'ظ', n: 'Zho', id: 17}, {h: 'ع', n: 'Ain', id: 18}, {h: 'غ', n: 'Gho', id: 19}, {h: 'ف', n: 'Fa', id: 20},
+            {h: 'ق', n: 'Qof', id: 21}, {h: 'ك', n: 'Kaf', id: 22}, {h: 'ل', n: 'Lam', id: 23}, {h: 'م', n: 'Mim', id: 24},
+            {h: 'ن', n: 'Nun', id: 25}, {h: 'و', n: 'Wau', id: 26}, {h: 'هـ', n: 'Ha', id: 27}, {h: 'ي', n: 'Ya', id: 28}
         ];
 
         let juzAmmaSurahs = [];
         let completed = JSON.parse(localStorage.getItem('juz30_royal_v2')) || [];
         let currentPlayingIndex = -1;
+        let isAutoplayMode = false; // LOGIKA BARU
 
         function startApp() {
             player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-            player.play().then(() => {
-                player.pause();
-                document.getElementById('audio-init').classList.add('hidden');
-                init();
-            });
+            player.play().then(() => { player.pause(); document.getElementById('audio-init').classList.add('hidden'); init(); });
         }
 
         async function init() {
@@ -154,10 +143,11 @@
 
         function renderHijaiyah() {
             const container = document.getElementById('hijaiyah-container');
+            container.innerHTML = "";
             hijaiyahData.forEach((item) => {
                 const div = document.createElement('div');
                 div.className = "letter-card";
-                div.onclick = () => playHijaiyah(item.n.toLowerCase(), div);
+                div.onclick = () => playHijaiyah(item.id, div);
                 div.innerHTML = `
                     <span class="arabic text-3xl font-bold text-slate-800 mb-1">${item.h}</span>
                     <span class="text-[9px] font-black text-gold-primary uppercase tracking-widest">${item.n}</span>
@@ -166,16 +156,16 @@
             });
         }
 
-        function playHijaiyah(name, el) {
+        function playHijaiyah(id, el) {
             stopAudio();
+            isAutoplayMode = false;
             el.classList.add('bg-gold-light/30', 'scale-90');
             setTimeout(() => el.classList.remove('bg-gold-light/30', 'scale-90'), 200);
 
-            // Link audio hijaiyah yang stabil
-            player.src = `https://www.alfafatih.com/audio/hijaiyah/${name}.mp3`;
+            // Link Audio Hijaiyah yang lebih stabil
+            player.src = `https://mushaf.id/assets/audio/hijaiyah/${id}.mp3`;
             player.play().catch(() => {
-                // Cadangan link audio kedua
-                player.src = `https://app.mushaf.id/assets/audio/hijaiyah/${name}.mp3`;
+                player.src = `https://raw.githubusercontent.com/alif-id/hijaiyah-audio/main/audio/${id}.mp3`;
                 player.play();
             });
         }
@@ -187,7 +177,7 @@
             document.body.style.overflow = 'hidden';
             document.getElementById('modal-title').innerText = s.name_simple;
             const body = document.getElementById('modal-body');
-            body.innerHTML = `<div class="py-20 text-center text-gold-primary font-black animate-pulse text-xs tracking-[0.4em]">FATHUL MUSHAF...</div>`;
+            body.innerHTML = `<div class="py-20 text-center text-gold-primary animate-pulse text-xs tracking-[0.4em]">MEMUAT...</div>`;
 
             try {
                 const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
@@ -206,7 +196,7 @@
                         <div class="transition-all duration-500" id="box-${i}" data-audio="${audio[i].audio}">
                             <div class="flex flex-col gap-5">
                                 <div class="flex justify-between items-center">
-                                    <button onclick="playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm font-bold text-sm">▶</button>
+                                    <button onclick="isAutoplayMode=false; playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm font-bold text-sm">▶</button>
                                     <span class="text-[9px] font-black text-slate-300 tracking-widest uppercase">Ayat ${i+1}</span>
                                 </div>
                                 <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900">${textArab}</p>
@@ -219,6 +209,7 @@
         }
 
         function playAudio(url, index) {
+            if (player.src === url && !player.paused) { stopAudio(); return; }
             stopAudio();
             currentPlayingIndex = index;
             const btn = document.getElementById(`play-${index}`);
@@ -229,23 +220,25 @@
             player.play().then(() => {
                 btn.innerHTML = `⏸`;
                 btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg transition-all scale-110";
-                const box = document.getElementById(`box-${index}`);
-                box.classList.add('active-ayat-box');
-                box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById(`box-${index}`).classList.add('active-ayat-box');
+                document.getElementById(`box-${index}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         }
 
+        // PERBAIKAN LOGIKA ENDED
         player.onended = () => {
-            const nextIndex = currentPlayingIndex + 1;
-            const nextBox = document.getElementById(`box-${nextIndex}`);
-            if (nextBox) {
-                playAudio(nextBox.getAttribute('data-audio'), nextIndex);
+            if (isAutoplayMode) {
+                const nextIndex = currentPlayingIndex + 1;
+                const nextBox = document.getElementById(`box-${nextIndex}`);
+                if (nextBox) playAudio(nextBox.getAttribute('data-audio'), nextIndex);
+                else { stopAudio(); isAutoplayMode = false; }
             } else {
                 stopAudio();
             }
         };
 
         function playFullSurah() {
+            isAutoplayMode = true;
             const firstBox = document.getElementById('box-0');
             if (firstBox) playAudio(firstBox.getAttribute('data-audio'), 0);
         }
@@ -260,7 +253,7 @@
         }
 
         function closeModal() {
-            stopAudio();
+            isAutoplayMode = false; stopAudio();
             document.getElementById('modal-content').classList.remove('show');
             setTimeout(() => { document.getElementById('surah-modal').classList.add('hidden'); document.body.style.overflow = ''; }, 500);
         }
