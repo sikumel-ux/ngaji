@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juz Amma Learning App</title>
+    <title>Juz Amma Learner - Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -16,13 +16,14 @@
         .scroll-container::-webkit-scrollbar { width: 6px; }
         .scroll-container::-webkit-scrollbar-track { background: #f1f5f9; }
         .scroll-container::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        .active-ayat { background-color: #f0fdf4; border-left: 4px solid #10b981; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-10">
 
     <header class="bg-emerald-600 text-white p-8 shadow-lg text-center mb-6">
-        <h1 class="text-3xl font-bold italic">📖 Juz Amma Learner</h1>
-        <p class="text-emerald-100 mt-2">Hafalan Terpantau, Ibadah Terjaga</p>
+        <h1 class="text-3xl font-bold">📖 Juz Amma Learner</h1>
+        <p class="text-emerald-100 mt-2">Hafalan & Muraja'ah Interaktif</p>
     </header>
 
     <main class="max-w-2xl mx-auto px-4">
@@ -39,7 +40,7 @@
         <div id="surah-container" class="space-y-4">
             <div class="flex flex-col items-center py-20 text-slate-400">
                 <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-4"></div>
-                <p>Menghubungkan ke server Al-Qur'an...</p>
+                <p>Menyiapkan Mushaf...</p>
             </div>
         </div>
     </main>
@@ -58,35 +59,37 @@
                 </div>
 
             <div class="p-4 border-t bg-slate-50 flex justify-between">
-                <button id="prev-btn" onclick="navSurah(-1)" class="px-5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-tight">← Sebelumnya</button>
-                <button id="next-btn" onclick="navSurah(1)" class="px-5 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-tight">Selanjutnya →</button>
+                <button id="prev-btn" onclick="navSurah(-1)" class="px-5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all">← Prev</button>
+                <button id="next-btn" onclick="navSurah(1)" class="px-5 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all">Next →</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Konfigurasi API
         const API_BASE = "https://api.quran.com/api/v4";
         const GAS_API = "https://script.google.com/macros/s/AKfycbylmGdPjCCjw1X3b_Niixqe2QnysK7WxYhxFU1EH43QpinIBaeVZcwzuCDQZNqRjPYvNA/exec";
         
         let juzAmmaSurahs = [];
         let completed = JSON.parse(localStorage.getItem('juz30_progress')) || [];
         let activeIndex = -1;
+        let currentAudio = null;
 
-        // 1. Ambil List Surat Juz 30
+        // 1. Inisialisasi Data
         async function init() {
             try {
                 const res = await fetch(`${API_BASE}/chapters?language=id`);
                 const data = await res.json();
-                // Juz 30 adalah surat 78 sampai 114
+                // Ambil Surat 78 (An-Naba) sampai 114 (An-Naas)
                 juzAmmaSurahs = data.chapters.slice(77, 114);
                 render();
                 updateUI();
             } catch (e) {
-                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500">Koneksi gagal. Silakan muat ulang halaman.</p>`;
+                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500">Gagal terhubung ke server Al-Quran. Muat ulang halaman.</p>`;
             }
         }
 
-        // 2. Render List ke Layar
+        // 2. Tampilkan Daftar Surat
         function render() {
             const container = document.getElementById('surah-container');
             container.innerHTML = "";
@@ -94,10 +97,10 @@
             juzAmmaSurahs.forEach((s, idx) => {
                 const isChecked = completed.includes(s.id) ? "checked" : "";
                 const div = document.createElement('div');
-                div.className = "group bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer";
+                div.className = "bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer";
                 div.innerHTML = `
                     <div class="flex-1 flex items-center gap-4" onclick="openModal(${idx})">
-                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-sm">
                             ${s.id}
                         </div>
                         <div>
@@ -106,7 +109,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="arabic text-xl text-slate-700">${s.name_arabic}</span>
+                        <span class="arabic text-xl text-slate-700 font-bold">${s.name_arabic}</span>
                         <input type="checkbox" ${isChecked} 
                             class="w-6 h-6 rounded-md border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer" 
                             onchange="toggleHafal(${s.id}, this.checked, event)">
@@ -116,49 +119,82 @@
             });
         }
 
-        // 3. Modal Management
+        // 3. Kontrol Modal & Audio
         async function openModal(index) {
             activeIndex = index;
             const s = juzAmmaSurahs[index];
             const modal = document.getElementById('surah-modal');
             const body = document.getElementById('modal-body');
             
+            stopAudio();
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             
             document.getElementById('modal-title').innerText = s.name_simple;
             document.getElementById('modal-subtitle').innerText = `${s.translated_name.name} | ${s.verses_count} Ayat`;
-            body.innerHTML = `<div class="flex justify-center py-20 animate-pulse text-emerald-500 italic">Membuka lembaran surat...</div>`;
+            body.innerHTML = `<div class="flex flex-col items-center py-20 text-emerald-500 italic"><div class="animate-spin h-8 w-8 border-b-2 border-emerald-500 mb-2 rounded-full"></div>Membuka lembaran...</div>`;
 
             try {
                 const [resA, resI] = await Promise.all([
                     fetch(`${API_BASE}/quran/verses/uthmani?chapter_number=${s.id}`),
-                    fetch(`${API_BASE}/quran/translations/33?chapter_number=${s.id}`) // ID 33 = Kemenag RI
+                    fetch(`${API_BASE}/quran/translations/33?chapter_number=${s.id}`)
                 ]);
                 const dataA = await resA.json();
                 const dataI = await resI.json();
 
+                // Bismillah (Kecuali At-Taubah - ID 9, tapi Juz 30 aman)
                 let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-3xl text-center text-emerald-600 mb-10 font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
                 
                 dataA.verses.forEach((v, i) => {
+                    const audioUrl = `https://verses.quran.com/Mishari_Rashid_Alafasy/mp3/${String(s.id).padStart(3, '0')}${String(i+1).padStart(3, '0')}.mp3`;
+                    
                     html += `
-                        <div class="border-b border-slate-100 pb-6">
+                        <div class="pb-6 border-b border-slate-100 transition-colors duration-300 p-2 rounded-lg" id="ayat-box-${i}">
                             <div class="flex justify-between items-start gap-4 mb-4">
-                                <span class="text-xs bg-slate-100 text-slate-500 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">${i+1}</span>
-                                <p class="arabic text-3xl leading-[3.5rem] text-slate-800">${v.text_uthmani}</p>
+                                <div class="flex flex-col gap-3">
+                                    <span class="text-xs font-bold bg-slate-100 text-slate-500 w-7 h-7 rounded-full flex items-center justify-center">${i+1}</span>
+                                    <button onclick="playAudio('${audioUrl}', ${i})" class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                            <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p class="arabic text-3xl leading-[4rem] text-slate-800">${v.text_uthmani}</p>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed pl-10">${dataI.translations[i].text}</p>
+                            <p class="text-sm text-slate-600 leading-relaxed pr-2">${dataI.translations[i].text}</p>
                         </div>
                     `;
                 });
                 body.innerHTML = html;
                 updateNavButtons();
             } catch (e) {
-                body.innerHTML = `<p class="text-center text-red-500">Gagal memuat ayat. Periksa koneksi.</p>`;
+                body.innerHTML = `<p class="text-center text-red-500">Gagal memuat ayat.</p>`;
             }
         }
 
+        function playAudio(url, index) {
+            stopAudio();
+            // Highlight baris
+            document.getElementById(`ayat-box-${index}`).classList.add('active-ayat');
+            
+            currentAudio = new Audio(url);
+            currentAudio.play();
+            currentAudio.onended = () => {
+                document.getElementById(`ayat-box-${index}`).classList.remove('active-ayat');
+            };
+        }
+
+        function stopAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            // Bersihkan semua highlight
+            document.querySelectorAll('[id^="ayat-box-"]').forEach(el => el.classList.remove('active-ayat'));
+        }
+
         function closeModal() {
+            stopAudio();
             document.getElementById('surah-modal').classList.add('hidden');
             document.body.style.overflow = '';
         }
@@ -173,27 +209,25 @@
             document.getElementById('next-btn').disabled = activeIndex === juzAmmaSurahs.length - 1;
         }
 
-        // 4. Save Progress (Local + GAS)
+        // 4. Progress & API GAS
         function toggleHafal(id, isChecked, event) {
-            event.stopPropagation(); // Mencegah modal terbuka saat klik checkbox
-            
+            event.stopPropagation();
             if (isChecked) {
                 if (!completed.includes(id)) completed.push(id);
             } else {
                 completed = completed.filter(item => item !== id);
             }
-
             localStorage.setItem('juz30_progress', JSON.stringify(completed));
             updateUI();
 
-            // Kirim ke Google Apps Script kamu
+            // Kirim ke Google Apps Script (No-CORS)
             fetch(GAS_API, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({
-                    surahNumber: id,
-                    status: isChecked ? "Hafal" : "Belum",
-                    date: new Date().toISOString()
+                body: JSON.stringify({ 
+                    surahId: id, 
+                    status: isChecked ? "Hafal" : "Belum", 
+                    time: new Date().toLocaleString('id-ID') 
                 })
             });
         }
@@ -204,9 +238,7 @@
             document.getElementById('progress-text').innerText = `${completed.length}/37 Surat`;
         }
 
-        // Start
         init();
     </script>
 </body>
-    </html>
-    
+</html>
