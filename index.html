@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juz Amma Learner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .arabic { font-family: 'Amiri', serif; }
+        .arabic { 
+            font-family: 'Amiri', serif; 
+            direction: rtl; 
+            text-align: right; 
+            line-height: 2.5; /* Spacing for readability */
+        }
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #60a5fa; /* blue-400 */
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6; /* blue-500 */
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -32,35 +51,64 @@
         </div>
     </main>
 
-    <script>
-        const API_URL = "https://quran-api-id.vercel.app/surah"; // API Quran Indonesia
-        const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
-        
-        let completedSurahs = [];
+    <div id="surah-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md md:max-w-xl lg:max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-emerald-500 text-white rounded-t-lg">
+                <h3 id="modal-surah-title" class="text-lg font-bold"></h3>
+                <button onclick="closeModal()" class="text-white hover:text-slate-100 text-2xl leading-none">&times;</button>
+            </div>
 
-        // 1. Ambil Data Juz 30 (Surat 78 - 114)
+            <div id="modal-surah-body" class="p-4 overflow-y-auto flex-1 scroll-container">
+                <p class="text-center text-slate-400 py-10">Memuat ayat-ayat...</p>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 flex justify-between gap-2">
+                <button id="prev-surah-btn" onclick="navigateToSurah(-1)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                    &larr; Sebelumnya
+                </button>
+                <button id="next-surah-btn" onclick="navigateToSurah(1)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Selanjutnya &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Konfigurasi API ---
+        const API_URL = "https://quran-api-id.vercel.app/surah"; // API Quran Indonesia
+        const GAS_API = "https://script.google.com/macros/s/AKfycbylmGdPjCCjw1X3b_Niixqe2QnysK7WxYhxFU1EH43QpinIBaeVZcwzuCDQZNqRjPYvNA/exec";
+        
+        // --- Variabel Global ---
+        let completedSurahs = JSON.parse(localStorage.getItem('juzAmmaProgress')) || [];
+        let allJuzAmmaSurahs = []; // Akan menyimpan semua surat Juz Amma
+        let currentSurahIndex = -1; // Indeks surat yang sedang dibuka di modal
+
+        // --- Fungsi Utama: Load Daftar Surat Juz Amma ---
         async function fetchJuzAmma() {
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
-                const juzAmma = data.filter(s => s.number >= 78 && s.number <= 114);
-                renderSurahs(juzAmma);
+                allJuzAmmaSurahs = data.filter(s => s.number >= 78 && s.number <= 114);
+                renderSurahs(allJuzAmmaSurahs);
+                updateUI();
             } catch (error) {
-                console.error("Gagal memuat data:", error);
-                document.getElementById('surah-container').innerHTML = "Gagal memuat data. Periksa koneksi internet.";
+                console.error("Gagal memuat daftar surat:", error);
+                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500 py-10">Gagal memuat daftar surat. Mohon periksa koneksi internet Anda.</p>`;
             }
         }
 
-        // 2. Render List ke HTML
+        // --- Render Daftar Surat ke HTML ---
         function renderSurahs(surahs) {
             const container = document.getElementById('surah-container');
             container.innerHTML = "";
 
             surahs.forEach(surah => {
+                const isChecked = completedSurahs.includes(surah.number) ? "checked" : "";
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center hover:border-emerald-300 transition-colors";
+                card.className = "bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center hover:bg-emerald-50 cursor-pointer transition-all";
+                
                 card.innerHTML = `
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 flex-1" onclick="openModal(${surah.number})">
                         <span class="bg-emerald-100 text-emerald-700 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs">
                             ${surah.number}
                         </span>
@@ -70,9 +118,9 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="arabic text-xl text-emerald-900">${surah.asma}</span>
-                        <input type="checkbox" 
-                               class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        <span class="arabic text-xl text-emerald-900 mr-2">${surah.asma}</span>
+                        <input type="checkbox" ${isChecked}
+                               class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                                onchange="toggleSurah(${surah.number}, this.checked)">
                     </div>
                 `;
@@ -80,44 +128,119 @@
             });
         }
 
-        // 3. Logika Simpan Hafalan & Integrasi API Kamu
+        // --- Logika Checkbox Hafalan & Kirim ke GAS ---
         async function toggleSurah(surahNumber, isChecked) {
             if (isChecked) {
-                completedSurahs.push(surahNumber);
+                if (!completedSurahs.includes(surahNumber)) completedSurahs.push(surahNumber);
             } else {
                 completedSurahs = completedSurahs.filter(n => n !== surahNumber);
             }
 
-            updateUI();
+            localStorage.setItem('juzAmmaProgress', JSON.stringify(completedSurahs));
+            updateUI(); // Update progress bar
 
-            // Kirim data ke Google Apps Script kamu
+            // Kirim data ke Google Apps Script
             try {
+                // Gunakan mode 'no-cors' karena ini adalah POST lintas domain ke GAS
+                // Respon dari GAS tidak bisa dibaca JS, tapi request tetap terkirim
                 fetch(GAS_API, {
                     method: 'POST',
-                    mode: 'no-cors', // Penting agar tidak kena CORS error di GAS
+                    mode: 'no-cors', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         surahNumber: surahNumber,
                         status: isChecked ? "Hafal" : "Belum",
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toLocaleString('id-ID') // Format waktu lokal Indonesia
                     })
                 });
-                console.log(`Status Surat ${surahNumber} dikirim ke API.`);
+                console.log(`Status Surat ${surahNumber} (${isChecked ? 'Hafal' : 'Belum'}) dikirim ke API.`);
             } catch (err) {
-                console.warn("Gagal mengirim ke GAS:", err);
+                console.warn("Gagal mengirim status hafalan ke Google Apps Script:", err);
+                // Mungkin bisa tambahkan UI warning ke user jika gagal
             }
         }
 
+        // --- Update Progres Bar di UI ---
         function updateUI() {
-            const total = 37; // Total surat di Juz Amma
+            const total = allJuzAmmaSurahs.length;
             const percent = (completedSurahs.length / total) * 100;
             document.getElementById('progress-bar').style.width = `${percent}%`;
             document.getElementById('progress-text').innerText = `${completedSurahs.length} dari ${total} surat selesai`;
         }
 
-        // Jalankan saat load
+        // --- Fungsi Modal: Buka & Tutup ---
+        function openModal(surahNumber) {
+            const modal = document.getElementById('surah-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Nonaktifkan scroll body
+
+            currentSurahIndex = allJuzAmmaSurahs.findIndex(s => s.number === surahNumber);
+            loadSurahDetails(surahNumber);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('surah-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Aktifkan kembali scroll body
+        }
+
+        // --- Fungsi Modal: Load Detail Ayat per Surat ---
+        async function loadSurahDetails(surahNumber) {
+            const modalTitle = document.getElementById('modal-surah-title');
+            const modalBody = document.getElementById('modal-surah-body');
+            modalBody.innerHTML = `<p class="text-center text-emerald-600 py-10">Memuat ayat-ayat...</p>`;
+            
+            try {
+                const response = await fetch(`${API_URL}/${surahNumber}`);
+                const data = await response.json();
+
+                modalTitle.innerText = `${data.name} (${data.translation})`;
+                
+                let ayatsHtml = `<div class="text-center text-xl my-4 text-emerald-700 arabic font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
+                data.ayahs.forEach(ayat => {
+                    ayatsHtml += `
+                        <div class="mb-6 p-3 bg-emerald-50 rounded-lg shadow-sm">
+                            <p class="arabic text-2xl mb-2 text-emerald-900">${ayat.text}</p>
+                            <p class="text-sm text-slate-700 leading-relaxed">${ayat.number}. ${ayat.translation}</p>
+                        </div>
+                    `;
+                });
+                modalBody.innerHTML = ayatsHtml;
+                updateModalNavigation();
+
+            } catch (error) {
+                console.error("Gagal memuat detail surat:", error);
+                modalBody.innerHTML = `<p class="text-center text-red-500 py-10">Gagal memuat detail surat. Coba lagi.</p>`;
+            }
+        }
+
+        // --- Fungsi Modal: Navigasi Surat (Sebelumnya/Selanjutnya) ---
+        function navigateToSurah(direction) {
+            const newIndex = currentSurahIndex + direction;
+            if (newIndex >= 0 && newIndex < allJuzAmmaSurahs.length) {
+                currentSurahIndex = newIndex;
+                loadSurahDetails(allJuzAmmaSurahs[currentSurahIndex].number);
+            }
+            updateModalNavigation();
+        }
+
+        function updateModalNavigation() {
+            const prevBtn = document.getElementById('prev-surah-btn');
+            const nextBtn = document.getElementById('next-surah-btn');
+            
+            prevBtn.disabled = currentSurahIndex === 0;
+            nextBtn.disabled = currentSurahIndex === allJuzAmmaSurahs.length - 1;
+        }
+
+        // --- Initial Load ---
         fetchJuzAmma();
+
+        // Close modal when clicking outside (optional)
+        document.getElementById('surah-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
     </script>
 </body>
-  </html>
-  
+</html>
