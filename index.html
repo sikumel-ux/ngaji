@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juz Amma Learner</title>
+    <title>Juz Amma Learning App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -11,236 +11,202 @@
         .arabic { 
             font-family: 'Amiri', serif; 
             direction: rtl; 
-            text-align: right; 
-            line-height: 2.5; /* Spacing for readability */
+            text-align: right;
         }
-        .scroll-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        .scroll-container::-webkit-scrollbar-track {
-            background: #f1f5f9; /* slate-100 */
-            border-radius: 10px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb {
-            background: #60a5fa; /* blue-400 */
-            border-radius: 10px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6; /* blue-500 */
-        }
+        .scroll-container::-webkit-scrollbar { width: 6px; }
+        .scroll-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .scroll-container::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen pb-10">
 
-    <header class="bg-emerald-600 text-white p-6 shadow-lg text-center">
-        <h1 class="text-2xl font-bold">📖 Juz Amma Learning App</h1>
-        <p class="text-sm opacity-90 mt-1">Pantau hafalanmu dengan mudah</p>
+    <header class="bg-emerald-600 text-white p-8 shadow-lg text-center mb-6">
+        <h1 class="text-3xl font-bold italic">📖 Juz Amma Learner</h1>
+        <p class="text-emerald-100 mt-2">Hafalan Terpantau, Ibadah Terjaga</p>
     </header>
 
-    <main class="max-w-2xl mx-auto p-4">
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-emerald-100">
-            <h2 class="text-sm font-semibold text-emerald-800 mb-2 text-center uppercase tracking-wider">Progres Hafalan</h2>
-            <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
-                <div id="progress-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+    <main class="max-w-2xl mx-auto px-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 mb-8">
+            <div class="flex justify-between items-end mb-2">
+                <h2 class="text-sm font-bold text-emerald-800 uppercase tracking-widest">Progres Hafalan</h2>
+                <span id="progress-text" class="text-xs font-semibold text-emerald-600">0/37 Surat</span>
             </div>
-            <p id="progress-text" class="text-xs text-center mt-2 text-slate-500">0 dari 37 surat selesai</p>
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="bg-emerald-500 h-full transition-all duration-700 w-0"></div>
+            </div>
         </div>
 
-        <div id="surah-container" class="space-y-3">
-            <p class="text-center text-slate-400 py-10">Memuat daftar surat...</p>
+        <div id="surah-container" class="space-y-4">
+            <div class="flex flex-col items-center py-20 text-slate-400">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-4"></div>
+                <p>Menghubungkan ke server Al-Qur'an...</p>
+            </div>
         </div>
     </main>
 
-    <div id="surah-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md md:max-w-xl lg:max-w-2xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-emerald-500 text-white rounded-t-lg">
-                <h3 id="modal-surah-title" class="text-lg font-bold"></h3>
-                <button onclick="closeModal()" class="text-white hover:text-slate-100 text-2xl leading-none">&times;</button>
+    <div id="surah-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="p-5 border-b flex justify-between items-center bg-emerald-600 text-white">
+                <div>
+                    <h3 id="modal-title" class="text-xl font-bold">Nama Surat</h3>
+                    <p id="modal-subtitle" class="text-xs opacity-80 uppercase tracking-tighter"></p>
+                </div>
+                <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-700 transition-colors text-2xl font-light">&times;</button>
             </div>
 
-            <div id="modal-surah-body" class="p-4 overflow-y-auto flex-1 scroll-container">
-                <p class="text-center text-slate-400 py-10">Memuat ayat-ayat...</p>
-            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto flex-1 scroll-container space-y-8 bg-white">
+                </div>
 
-            <div class="p-4 border-t border-slate-200 flex justify-between gap-2">
-                <button id="prev-surah-btn" onclick="navigateToSurah(-1)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                    &larr; Sebelumnya
-                </button>
-                <button id="next-surah-btn" onclick="navigateToSurah(1)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Selanjutnya &rarr;
-                </button>
+            <div class="p-4 border-t bg-slate-50 flex justify-between">
+                <button id="prev-btn" onclick="navSurah(-1)" class="px-5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-tight">← Sebelumnya</button>
+                <button id="next-btn" onclick="navSurah(1)" class="px-5 py-2 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all tracking-tight">Selanjutnya →</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Konfigurasi API ---
-        const API_URL = "https://quran-api-id.vercel.app/surah"; // API Quran Indonesia
+        const API_BASE = "https://api.quran.com/api/v4";
         const GAS_API = "https://script.google.com/macros/s/AKfycbylmGdPjCCjw1X3b_Niixqe2QnysK7WxYhxFU1EH43QpinIBaeVZcwzuCDQZNqRjPYvNA/exec";
         
-        // --- Variabel Global ---
-        let completedSurahs = JSON.parse(localStorage.getItem('juzAmmaProgress')) || [];
-        let allJuzAmmaSurahs = []; // Akan menyimpan semua surat Juz Amma
-        let currentSurahIndex = -1; // Indeks surat yang sedang dibuka di modal
+        let juzAmmaSurahs = [];
+        let completed = JSON.parse(localStorage.getItem('juz30_progress')) || [];
+        let activeIndex = -1;
 
-        // --- Fungsi Utama: Load Daftar Surat Juz Amma ---
-        async function fetchJuzAmma() {
+        // 1. Ambil List Surat Juz 30
+        async function init() {
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                allJuzAmmaSurahs = data.filter(s => s.number >= 78 && s.number <= 114);
-                renderSurahs(allJuzAmmaSurahs);
+                const res = await fetch(`${API_BASE}/chapters?language=id`);
+                const data = await res.json();
+                // Juz 30 adalah surat 78 sampai 114
+                juzAmmaSurahs = data.chapters.slice(77, 114);
+                render();
                 updateUI();
-            } catch (error) {
-                console.error("Gagal memuat daftar surat:", error);
-                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500 py-10">Gagal memuat daftar surat. Mohon periksa koneksi internet Anda.</p>`;
+            } catch (e) {
+                document.getElementById('surah-container').innerHTML = `<p class="text-center text-red-500">Koneksi gagal. Silakan muat ulang halaman.</p>`;
             }
         }
 
-        // --- Render Daftar Surat ke HTML ---
-        function renderSurahs(surahs) {
+        // 2. Render List ke Layar
+        function render() {
             const container = document.getElementById('surah-container');
             container.innerHTML = "";
 
-            surahs.forEach(surah => {
-                const isChecked = completedSurahs.includes(surah.number) ? "checked" : "";
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center hover:bg-emerald-50 cursor-pointer transition-all";
-                
-                card.innerHTML = `
-                    <div class="flex items-center gap-4 flex-1" onclick="openModal(${surah.number})">
-                        <span class="bg-emerald-100 text-emerald-700 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs">
-                            ${surah.number}
-                        </span>
+            juzAmmaSurahs.forEach((s, idx) => {
+                const isChecked = completed.includes(s.id) ? "checked" : "";
+                const div = document.createElement('div');
+                div.className = "group bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer";
+                div.innerHTML = `
+                    <div class="flex-1 flex items-center gap-4" onclick="openModal(${idx})">
+                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center font-bold text-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            ${s.id}
+                        </div>
                         <div>
-                            <h3 class="font-semibold text-slate-800">${surah.name}</h3>
-                            <p class="text-xs text-slate-500">${surah.translation} • ${surah.numberOfVerses} Ayat</p>
+                            <h4 class="font-bold text-slate-800 tracking-tight">${s.name_simple}</h4>
+                            <p class="text-xs text-slate-400">${s.translated_name.name} • ${s.verses_count} Ayat</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="arabic text-xl text-emerald-900 mr-2">${surah.asma}</span>
-                        <input type="checkbox" ${isChecked}
-                               class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                               onchange="toggleSurah(${surah.number}, this.checked)">
+                    <div class="flex items-center gap-4">
+                        <span class="arabic text-xl text-slate-700">${s.name_arabic}</span>
+                        <input type="checkbox" ${isChecked} 
+                            class="w-6 h-6 rounded-md border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer" 
+                            onchange="toggleHafal(${s.id}, this.checked, event)">
                     </div>
                 `;
-                container.appendChild(card);
+                container.appendChild(div);
             });
         }
 
-        // --- Logika Checkbox Hafalan & Kirim ke GAS ---
-        async function toggleSurah(surahNumber, isChecked) {
-            if (isChecked) {
-                if (!completedSurahs.includes(surahNumber)) completedSurahs.push(surahNumber);
-            } else {
-                completedSurahs = completedSurahs.filter(n => n !== surahNumber);
-            }
-
-            localStorage.setItem('juzAmmaProgress', JSON.stringify(completedSurahs));
-            updateUI(); // Update progress bar
-
-            // Kirim data ke Google Apps Script
-            try {
-                // Gunakan mode 'no-cors' karena ini adalah POST lintas domain ke GAS
-                // Respon dari GAS tidak bisa dibaca JS, tapi request tetap terkirim
-                fetch(GAS_API, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        surahNumber: surahNumber,
-                        status: isChecked ? "Hafal" : "Belum",
-                        timestamp: new Date().toLocaleString('id-ID') // Format waktu lokal Indonesia
-                    })
-                });
-                console.log(`Status Surat ${surahNumber} (${isChecked ? 'Hafal' : 'Belum'}) dikirim ke API.`);
-            } catch (err) {
-                console.warn("Gagal mengirim status hafalan ke Google Apps Script:", err);
-                // Mungkin bisa tambahkan UI warning ke user jika gagal
-            }
-        }
-
-        // --- Update Progres Bar di UI ---
-        function updateUI() {
-            const total = allJuzAmmaSurahs.length;
-            const percent = (completedSurahs.length / total) * 100;
-            document.getElementById('progress-bar').style.width = `${percent}%`;
-            document.getElementById('progress-text').innerText = `${completedSurahs.length} dari ${total} surat selesai`;
-        }
-
-        // --- Fungsi Modal: Buka & Tutup ---
-        function openModal(surahNumber) {
+        // 3. Modal Management
+        async function openModal(index) {
+            activeIndex = index;
+            const s = juzAmmaSurahs[index];
             const modal = document.getElementById('surah-modal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Nonaktifkan scroll body
-
-            currentSurahIndex = allJuzAmmaSurahs.findIndex(s => s.number === surahNumber);
-            loadSurahDetails(surahNumber);
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('surah-modal');
-            modal.classList.add('hidden');
-            document.body.style.overflow = ''; // Aktifkan kembali scroll body
-        }
-
-        // --- Fungsi Modal: Load Detail Ayat per Surat ---
-        async function loadSurahDetails(surahNumber) {
-            const modalTitle = document.getElementById('modal-surah-title');
-            const modalBody = document.getElementById('modal-surah-body');
-            modalBody.innerHTML = `<p class="text-center text-emerald-600 py-10">Memuat ayat-ayat...</p>`;
+            const body = document.getElementById('modal-body');
             
-            try {
-                const response = await fetch(`${API_URL}/${surahNumber}`);
-                const data = await response.json();
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('modal-title').innerText = s.name_simple;
+            document.getElementById('modal-subtitle').innerText = `${s.translated_name.name} | ${s.verses_count} Ayat`;
+            body.innerHTML = `<div class="flex justify-center py-20 animate-pulse text-emerald-500 italic">Membuka lembaran surat...</div>`;
 
-                modalTitle.innerText = `${data.name} (${data.translation})`;
+            try {
+                const [resA, resI] = await Promise.all([
+                    fetch(`${API_BASE}/quran/verses/uthmani?chapter_number=${s.id}`),
+                    fetch(`${API_BASE}/quran/translations/33?chapter_number=${s.id}`) // ID 33 = Kemenag RI
+                ]);
+                const dataA = await resA.json();
+                const dataI = await resI.json();
+
+                let html = (s.id !== 1 && s.id !== 9) ? `<div class="arabic text-3xl text-center text-emerald-600 mb-10 font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>` : "";
                 
-                let ayatsHtml = `<div class="text-center text-xl my-4 text-emerald-700 arabic font-bold">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
-                data.ayahs.forEach(ayat => {
-                    ayatsHtml += `
-                        <div class="mb-6 p-3 bg-emerald-50 rounded-lg shadow-sm">
-                            <p class="arabic text-2xl mb-2 text-emerald-900">${ayat.text}</p>
-                            <p class="text-sm text-slate-700 leading-relaxed">${ayat.number}. ${ayat.translation}</p>
+                dataA.verses.forEach((v, i) => {
+                    html += `
+                        <div class="border-b border-slate-100 pb-6">
+                            <div class="flex justify-between items-start gap-4 mb-4">
+                                <span class="text-xs bg-slate-100 text-slate-500 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">${i+1}</span>
+                                <p class="arabic text-3xl leading-[3.5rem] text-slate-800">${v.text_uthmani}</p>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed pl-10">${dataI.translations[i].text}</p>
                         </div>
                     `;
                 });
-                modalBody.innerHTML = ayatsHtml;
-                updateModalNavigation();
-
-            } catch (error) {
-                console.error("Gagal memuat detail surat:", error);
-                modalBody.innerHTML = `<p class="text-center text-red-500 py-10">Gagal memuat detail surat. Coba lagi.</p>`;
+                body.innerHTML = html;
+                updateNavButtons();
+            } catch (e) {
+                body.innerHTML = `<p class="text-center text-red-500">Gagal memuat ayat. Periksa koneksi.</p>`;
             }
         }
 
-        // --- Fungsi Modal: Navigasi Surat (Sebelumnya/Selanjutnya) ---
-        function navigateToSurah(direction) {
-            const newIndex = currentSurahIndex + direction;
-            if (newIndex >= 0 && newIndex < allJuzAmmaSurahs.length) {
-                currentSurahIndex = newIndex;
-                loadSurahDetails(allJuzAmmaSurahs[currentSurahIndex].number);
-            }
-            updateModalNavigation();
+        function closeModal() {
+            document.getElementById('surah-modal').classList.add('hidden');
+            document.body.style.overflow = '';
         }
 
-        function updateModalNavigation() {
-            const prevBtn = document.getElementById('prev-surah-btn');
-            const nextBtn = document.getElementById('next-surah-btn');
+        function navSurah(dir) {
+            let nextIdx = activeIndex + dir;
+            if (nextIdx >= 0 && nextIdx < juzAmmaSurahs.length) openModal(nextIdx);
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prev-btn').disabled = activeIndex === 0;
+            document.getElementById('next-btn').disabled = activeIndex === juzAmmaSurahs.length - 1;
+        }
+
+        // 4. Save Progress (Local + GAS)
+        function toggleHafal(id, isChecked, event) {
+            event.stopPropagation(); // Mencegah modal terbuka saat klik checkbox
             
-            prevBtn.disabled = currentSurahIndex === 0;
-            nextBtn.disabled = currentSurahIndex === allJuzAmmaSurahs.length - 1;
+            if (isChecked) {
+                if (!completed.includes(id)) completed.push(id);
+            } else {
+                completed = completed.filter(item => item !== id);
+            }
+
+            localStorage.setItem('juz30_progress', JSON.stringify(completed));
+            updateUI();
+
+            // Kirim ke Google Apps Script kamu
+            fetch(GAS_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    surahNumber: id,
+                    status: isChecked ? "Hafal" : "Belum",
+                    date: new Date().toISOString()
+                })
+            });
         }
 
-        // --- Initial Load ---
-        fetchJuzAmma();
+        function updateUI() {
+            const pct = (completed.length / 37) * 100;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${completed.length}/37 Surat`;
+        }
 
-        // Close modal when clicking outside (optional)
-        document.getElementById('surah-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
+        // Start
+        init();
     </script>
 </body>
-</html>
+    </html>
+    
