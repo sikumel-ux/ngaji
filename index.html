@@ -12,34 +12,40 @@
         .arabic { font-family: 'Amiri', serif; direction: rtl; }
         .islami-pattern { background-image: url('https://www.transparenttextures.com/patterns/islamic-art.png'); opacity: 0.03; position: fixed; inset: 0; pointer-events: none; }
         .royal-card { background: white; border-radius: 24px; border: 1px solid rgba(197, 163, 88, 0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.03); transition: all 0.3s ease; cursor: pointer; }
-        .royal-card:active { transform: scale(0.95); }
+        .royal-card:active { transform: scale(0.97); }
         .gold-header { background: linear-gradient(135deg, #1A1A1A 0%, #333333 100%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
-        .tab-btn { transition: all 0.4s; position: relative; }
-        .tab-btn.active { color: var(--gold-primary); }
+        .tab-btn { transition: all 0.4s; position: relative; opacity: 0.5; }
+        .tab-btn.active { color: var(--gold-primary); opacity: 1; }
         .tab-btn.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; background: var(--gold-primary); border-radius: 10px; }
         .hijaiyah-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 20px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .letter-card { aspect-ratio: 1/1; background: white; border-radius: 20px; display: flex; flex-direction: column; items-center; justify-content: center; border: 1px solid rgba(197, 163, 88, 0.15); transition: all 0.2s; cursor: pointer; text-align: center; }
         .letter-card:active { background: var(--gold-light); transform: scale(0.9); }
         .modal-sheet { transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); }
         .modal-sheet.show { transform: translateY(0); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-ayat-box { background-color: rgba(197, 163, 88, 0.05); border-radius: 24px; padding: 20px; border-left: 4px solid var(--gold-primary); }
+        .ios-checkbox { appearance: none; width: 28px; height: 28px; border: 2px solid var(--gold-light); border-radius: 50%; position: relative; cursor: pointer; transition: 0.3s; }
+        .ios-checkbox:checked { background: var(--gold-primary); border-color: var(--gold-primary); }
+        .ios-checkbox:checked::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: bold; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-10">
     <div class="islami-pattern"></div>
 
     <div id="audio-init" class="fixed inset-0 z-[60] bg-[#1A1A1A] flex flex-col items-center justify-center p-10 text-center">
         <div class="w-24 h-24 border-2 border-[#C5A358] rounded-full flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(197,163,88,0.3)]">
             <span class="text-4xl animate-pulse">🕌</span>
         </div>
-        <h2 class="text-2xl font-bold text-[#E8D5A1] mb-2 italic tracking-widest">Ahlan wa Sahlan</h2>
-        <button onclick="startApp()" class="w-full max-w-xs py-4 bg-[#C5A358] text-white rounded-2xl font-bold shadow-2xl tracking-[0.2em] active:scale-95 transition-all">MASUK MUSHAF</button>
+        <h2 class="text-2xl font-bold text-[#E8D5A1] mb-2 italic tracking-widest">Bismillah</h2>
+        <p class="text-slate-400 text-sm mb-10 leading-relaxed">Aktifkan Murottal & Belajar Hijaiyah</p>
+        <button onclick="startApp()" class="w-full max-w-xs py-4 bg-[#C5A358] text-white rounded-2xl font-bold shadow-2xl tracking-[0.2em] active:scale-95 transition-all">
+            MULAI
+        </button>
     </div>
 
     <header class="gold-header px-8 pt-12 pb-14 text-white relative shadow-2xl">
         <div class="max-w-2xl mx-auto relative z-10 text-center">
             <h1 id="main-title" class="text-3xl font-extrabold tracking-tight mb-8">Juz Amma</h1>
-            
             <div class="flex justify-center gap-12 text-xs font-black tracking-[0.2em] uppercase">
                 <button onclick="switchTab('juz')" id="tab-juz" class="tab-btn active">Juz 30</button>
                 <button onclick="switchTab('hijaiyah')" id="tab-hijaiyah" class="tab-btn">Hijaiyah</button>
@@ -61,20 +67,16 @@
 
     <main class="max-w-2xl mx-auto px-6 mt-8 relative z-20">
         <div id="section-juz" class="space-y-4"></div>
-        
         <div id="section-hijaiyah" class="hidden">
-            <div class="text-center mb-8">
-                <p class="text-[10px] font-black text-gold-primary tracking-[0.3em] uppercase">Klik huruf untuk mendengar suara</p>
-            </div>
             <div class="hijaiyah-grid" id="hijaiyah-container"></div>
         </div>
     </main>
 
     <div id="surah-modal" class="fixed inset-0 z-50 flex items-end justify-center hidden bg-black/70 backdrop-blur-sm">
         <div id="modal-content" class="modal-sheet bg-white w-full max-w-2xl rounded-t-[45px] h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="w-full flex justify-center py-5" onclick="closeModal()"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
+            <div class="w-full flex justify-center py-5" onclick="closeModal()"><div class="w-12 h-1.5 bg-slate-200 rounded-full cursor-pointer"></div></div>
             <div class="px-10 pb-6 flex justify-between items-center border-b border-slate-50">
-                <button onclick="closeModal()" class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">Tutup</button>
+                <button onclick="closeModal()" class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">TUTUP</button>
                 <h3 id="modal-title" class="text-xl font-extrabold text-slate-900"></h3>
                 <div class="w-10"></div>
             </div>
@@ -84,6 +86,8 @@
 
     <script>
         const player = new Audio();
+        const GAS_API = "https://script.google.com/macros/s/AKfycbx9JsUb0saYvFnH8vpCn2JZu_AzdrXXXmQIcGfMW0dsTvPndFQC_CtKyLhMx_6Kjd_IEg/exec";
+        
         const hijaiyahData = [
             {h: 'أ', n: 'Alif'}, {h: 'ب', n: 'Ba'}, {h: 'ت', n: 'Ta'}, {h: 'ث', n: 'Tsa'},
             {h: 'ج', n: 'Jim'}, {h: 'ح', n: 'Ha'}, {h: 'خ', n: 'Kho'}, {h: 'د', n: 'Dal'},
@@ -91,7 +95,7 @@
             {h: 'ش', n: 'Syin'}, {h: 'ص', n: 'Shod'}, {h: 'ض', n: 'Dhod'}, {h: 'ط', n: 'Tho'},
             {h: 'ظ', n: 'Zho'}, {h: 'ع', n: 'Ain'}, {h: 'غ', n: 'Gho'}, {h: 'ف', n: 'Fa'},
             {h: 'ق', n: 'Qof'}, {h: 'ك', n: 'Kaf'}, {h: 'ل', n: 'Lam'}, {h: 'م', n: 'Mim'},
-            {h: 'ن', n: 'Nun'}, {h: 'و', n: 'Wau'}, {h: 'هـ', n: 'Ha'}, {h: 'ي', n: 'Ya'}
+            {h: 'ن', n: 'Nun'}, {h: 'و', n: 'Wau'}, {h: 'هـ', n: 'Haa'}, {h: 'ي', n: 'Ya'}
         ];
 
         let juzAmmaSurahs = [];
@@ -100,7 +104,11 @@
 
         function startApp() {
             player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-            player.play().then(() => { player.pause(); document.getElementById('audio-init').classList.add('hidden'); init(); });
+            player.play().then(() => {
+                player.pause();
+                document.getElementById('audio-init').classList.add('hidden');
+                init();
+            });
         }
 
         async function init() {
@@ -111,7 +119,7 @@
                 renderJuz();
                 renderHijaiyah();
                 updateUI();
-            } catch (e) { console.log("Init Error"); }
+            } catch (e) { console.log("Load failed"); }
         }
 
         function switchTab(tab) {
@@ -137,7 +145,7 @@
                             <div><h4 class="font-extrabold text-slate-800 text-lg">${s.name_simple}</h4><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${s.translated_name.name}</p></div>
                         </div>
                         <div class="flex items-center gap-6">
-                            <span class="arabic text-2xl text-slate-700">${s.name_arabic}</span>
+                            <span class="arabic text-2xl text-slate-700 font-bold">${s.name_arabic}</span>
                             <input type="checkbox" class="ios-checkbox" ${isChecked} onchange="toggleHafal(${s.id}, this.checked, event)">
                         </div>
                     </div>`;
@@ -146,23 +154,30 @@
 
         function renderHijaiyah() {
             const container = document.getElementById('hijaiyah-container');
-            hijaiyahData.forEach((item, idx) => {
-                container.innerHTML += `
-                    <div class="letter-card" onclick="playHijaiyah('${item.n.toLowerCase()}', this)">
-                        <span class="arabic text-3xl font-bold text-slate-800 mb-1">${item.h}</span>
-                        <span class="text-[9px] font-black text-gold-primary uppercase tracking-widest">${item.n}</span>
-                    </div>`;
+            hijaiyahData.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = "letter-card";
+                div.onclick = () => playHijaiyah(item.n.toLowerCase(), div);
+                div.innerHTML = `
+                    <span class="arabic text-3xl font-bold text-slate-800 mb-1">${item.h}</span>
+                    <span class="text-[9px] font-black text-gold-primary uppercase tracking-widest">${item.n}</span>
+                `;
+                container.appendChild(div);
             });
         }
 
         function playHijaiyah(name, el) {
             stopAudio();
-            // Menggunakan audio dari pengucapan standar
-            player.src = `https://download.quranicaudio.com/quran/misyari_rasyid_al_afasy/001.mp3`; // Dummy URL as example
-            // Untuk Hijaiyah beneran, biasanya kita pakai file lokal atau API spesifik. 
-            // Sebagai demo, kita gunakan notifikasi suara sistem atau link audio hijaiyah.
-            player.src = `https://www.alfafatih.com/audio/hijaiyah/${name}.mp3`; 
-            player.play().catch(() => console.log("Audio hijaiyah not found"));
+            el.classList.add('bg-gold-light/30', 'scale-90');
+            setTimeout(() => el.classList.remove('bg-gold-light/30', 'scale-90'), 200);
+
+            // Link audio hijaiyah yang stabil
+            player.src = `https://www.alfafatih.com/audio/hijaiyah/${name}.mp3`;
+            player.play().catch(() => {
+                // Cadangan link audio kedua
+                player.src = `https://app.mushaf.id/assets/audio/hijaiyah/${name}.mp3`;
+                player.play();
+            });
         }
 
         async function openModal(index) {
@@ -207,22 +222,33 @@
             stopAudio();
             currentPlayingIndex = index;
             const btn = document.getElementById(`play-${index}`);
+            if(!btn) return;
+
             btn.innerHTML = `<div class="w-4 h-4 border-2 border-gold-primary border-t-transparent animate-spin rounded-full"></div>`;
             player.src = url;
             player.play().then(() => {
                 btn.innerHTML = `⏸`;
-                btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg";
-                document.getElementById(`box-${index}`).classList.add('bg-gold-light/5', 'p-4', 'rounded-3xl', 'border-l-4', 'border-gold-primary');
-                document.getElementById(`box-${index}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                btn.className = "w-12 h-12 rounded-2xl bg-gold-primary text-white flex items-center justify-center shadow-lg transition-all scale-110";
+                const box = document.getElementById(`box-${index}`);
+                box.classList.add('active-ayat-box');
+                box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         }
 
         player.onended = () => {
             const nextIndex = currentPlayingIndex + 1;
             const nextBox = document.getElementById(`box-${nextIndex}`);
-            if (nextBox) playAudio(nextBox.getAttribute('data-audio'), nextIndex);
-            else stopAudio();
+            if (nextBox) {
+                playAudio(nextBox.getAttribute('data-audio'), nextIndex);
+            } else {
+                stopAudio();
+            }
         };
+
+        function playFullSurah() {
+            const firstBox = document.getElementById('box-0');
+            if (firstBox) playAudio(firstBox.getAttribute('data-audio'), 0);
+        }
 
         function stopAudio() {
             player.pause();
@@ -230,21 +256,22 @@
                 b.innerHTML = "▶";
                 b.className = "w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center border border-gold-light/20 shadow-sm";
             });
-            document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('bg-gold-light/5', 'p-4', 'rounded-3xl', 'border-l-4', 'border-gold-primary'));
+            document.querySelectorAll('[id^="box-"]').forEach(x => x.classList.remove('active-ayat-box'));
         }
 
-        function playFullSurah() {
-            const firstBox = document.getElementById('box-0');
-            if (firstBox) playAudio(firstBox.getAttribute('data-audio'), 0);
+        function closeModal() {
+            stopAudio();
+            document.getElementById('modal-content').classList.remove('show');
+            setTimeout(() => { document.getElementById('surah-modal').classList.add('hidden'); document.body.style.overflow = ''; }, 500);
         }
-
-        function closeModal() { stopAudio(); document.getElementById('modal-content').classList.remove('show'); setTimeout(() => { document.getElementById('surah-modal').classList.add('hidden'); document.body.style.overflow = ''; }, 500); }
 
         function toggleHafal(id, check, e) {
             e.stopPropagation();
-            if (check) { if(!completed.includes(id)) completed.push(id); } else { completed = completed.filter(i => i !== id); }
+            if (check) { if(!completed.includes(id)) completed.push(id); }
+            else { completed = completed.filter(i => i !== id); }
             localStorage.setItem('juz30_royal_v2', JSON.stringify(completed));
             updateUI();
+            fetch(GAS_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ surahId: id, status: check ? "Hafal" : "Belum" }) });
         }
 
         function updateUI() {
@@ -255,5 +282,4 @@
         }
     </script>
 </body>
-                  </html>
-  
+</html>
