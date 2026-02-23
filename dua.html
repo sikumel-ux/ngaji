@@ -84,7 +84,7 @@
                 <button onclick="closeModal()" class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">TUTUP</button>
                 <button onclick="toggleSpeed()" id="speed-btn" class="px-4 py-2 bg-gold-light/20 text-gold-primary rounded-full font-black text-[10px] tracking-widest border border-gold-primary/20">SPEED: 1.0x</button>
             </div>
-            <div id="modal-body" class="p-8 overflow-y-auto flex-1 no-scrollbar space-y-10 scroll-smooth"></div>
+            <div id="modal-body" class="p-8 overflow-y-auto flex-1 no-scrollbar scroll-smooth"></div>
         </div>
     </div>
 
@@ -168,7 +168,6 @@
             player.play();
         }
 
-        // UPDATE DISINI: Menjadi 2 Huruf saja
         function generateTraining() {
             let selected = [];
             for(let i=0; i<2; i++) selected.push(hijaiyahData[Math.floor(Math.random() * hijaiyahData.length)]);
@@ -182,14 +181,30 @@
             setTimeout(() => document.getElementById('modal-content').classList.add('show'), 10);
             const body = document.getElementById('modal-body');
             body.innerHTML = `<div class="py-20 text-center text-gold-primary animate-pulse font-bold">MEMUAT...</div>`;
+
             try {
                 const res = await fetch(`https://api.alquran.cloud/v1/surah/${s.id}/editions/quran-uthmani,id.indonesian,ar.alafasy`);
                 const data = await res.json();
                 const arab = data.data[0].ayahs;
                 const indo = data.data[1].ayahs;
                 const audio = data.data[2].ayahs;
-                let html = `<button onclick="playFullSurah()" class="w-full mb-8 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-xs tracking-widest">▶ PUTAR SATU SURAT</button>`;
+
+                // Cek apakah butuh Bismillah (Kecuali Al-Fatihah(1) dan At-Taubah(9))
+                let bismillahHeader = "";
+                if (s.id !== 1 && s.id !== 9) {
+                    bismillahHeader = `<div class="arabic text-xl text-center text-gold-primary mb-2 opacity-80">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`;
+                }
+
+                let html = bismillahHeader;
+                html += `<button onclick="playFullSurah()" class="w-full mb-10 py-4 bg-gold-light/10 border border-gold-primary/20 rounded-2xl text-gold-primary font-bold text-xs tracking-widest">▶ PUTAR SATU SURAT</button>`;
+                
                 arab.forEach((v, i) => {
+                    let textArab = v.text;
+                    // Bersihkan Bismillah dari teks ayat pertama jika ada (karena sudah ada di header)
+                    if (i === 0 && s.id !== 1 && s.id !== 9) {
+                        textArab = textArab.replace("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ", "").trim();
+                    }
+
                     html += `
                         <div class="transition-all duration-500 mb-10" id="box-${i}" data-audio="${audio[i].audio}">
                             <div class="flex flex-col gap-4">
@@ -197,7 +212,7 @@
                                     <button onclick="isAutoplayMode=false; playAudio('${audio[i].audio}', ${i})" id="play-${i}" class="w-12 h-12 rounded-2xl bg-gold-light/10 text-gold-primary flex items-center justify-center font-bold">▶</button>
                                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ayat ${i+1}</span>
                                 </div>
-                                <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900">${v.text}</p>
+                                <p class="arabic text-4xl leading-[4.5rem] text-right text-slate-900">${textArab}</p>
                                 <p class="text-sm text-slate-500 text-left border-l-2 border-gold-light/30 pl-4 italic">${indo[i].text}</p>
                             </div>
                         </div>`;
@@ -249,4 +264,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    
